@@ -38,7 +38,9 @@ class BasicWaveParams:
         'WIDTH'  : '?',
         'RISE'   : '?',
         'FALL'   : '?',
-        'DLY'    : '?'
+        'DLY'    : '?',
+        'STDEV'  : 'V',
+        'MEAN'   : 'V'
     }
 
     @staticmethod
