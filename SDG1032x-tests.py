@@ -1,5 +1,6 @@
 
-from SDG1032X import SDG1032X, BasicWaveParams
+from devices.SDG1032X import SDG1032X, BasicWaveParams
+
 import sys
 import time
 
