@@ -1,3 +1,4 @@
+from .device import Device
 import pyvisa
 import sys
 import time
@@ -296,22 +297,27 @@ class BasicWaveParams:
 
 
 
-class SDG1032X:
+class SDG1032X(Device):
 
-    name = 'SDG1032X'
+    '''
+    SDG1032X - SDG1000X Series Function/Arbitrary Waveform Generator.
+    General specs:
+        Max output frequency: 30 MHz
+        Max sampling rate: 150 MSa/s
+        Vertical resolution: 14-bit
+        Wave length: 16 kpts
+        Channels: 2 CH
+
+    More info at:
+        https://siglentna.com/product/sdg1032x/
+
+    Programming Guide:
+        https://siglentna.com/USA_website_2014/Documents/Program_Material/SDG_ProgrammingGuide_PG_E03B.pdf
+    '''
 
     def __init__(self, ipaddr, verbose=False):
-        self._ipaddr = ipaddr
-        self._verbose = verbose
-        self._rm = pyvisa.ResourceManager()
-        self._instr = self._rm.open_resource("TCPIP0::{}".format(ipaddr))
+        super().__init__(ipaddr, 'SDG1032X', verbose)
 
-    def instance(self): return "{}@{}".format(self.name, self._ipaddr)
-    def instr(self): return self._instr
-    def IDN(self):return self._instr.query("*IDN?")[:-1]
-
-    def RST(self): self._instr.write("*RST")
-    def CLS(self): self._instr.write("*CLS")
-    def STATUS_PRESET(self): self._instr.write("STATUS:PRESET")
+    def STATUS_PRESET(self): self.instr().write("STATUS:PRESET")
 
     def BSWV(self, chan=1): return BasicWaveParams(self, chan)
