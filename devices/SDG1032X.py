@@ -4,6 +4,15 @@ import time
 
 class BasicWaveParams:
 
+    '''
+    Public instance members:
+      device    The owner device
+      chan:     The channel number
+
+    Public class members:
+        units:  The dictionary of theuits of measurement for each attribute
+    '''
+
     keys = {
         'SINE'  : ['FRQ',   'PERI', 'AMP', 'AMPVRMS', 'OFST', 'HLEV', 'LLEV', 'PHSE'],
         'SQUARE': ['FRQ',   'PERI', 'AMP', 'AMPVRMS', 'OFST', 'HLEV', 'LLEV', 'PHSE', 'DUTY'],
@@ -39,9 +48,9 @@ class BasicWaveParams:
             raise KeyError(f"{context}: unsupported parameter: {param}")
         return BasicWaveParams.units[param]
 
-    def __init__(self, device, chan=1):
-        self._device = device
-        self._chan = chan
+    def __init__(self, device, chan):
+        self.device = device
+        self.chan = chan
         self._data = None           # raw data returned by a query
         self._property = None       # (key,val) pairs for parsed parameters
 
@@ -273,12 +282,12 @@ class BasicWaveParams:
         return self._property[name]
 
     def _set(self, prop, val):
-        self._device.instr().write("C{}:BSWV {},{}".format(self._chan, prop, val))
+        self.device.instr().write("C{}:BSWV {},{}".format(self.chan, prop, val))
         self._update()
 
     def _update(self):
         self._property = {}
-        self._data = self._device.instr().query("C{}:BSWV?".format(self._chan)).split()[1]
+        self._data = self.device.instr().query("C{}:BSWV?".format(self.chan)).split()[1]
         foldedParams = self._data.split(",")
         for i in range(0, len(foldedParams), 2):
             self._property[foldedParams[i]] = foldedParams[i + 1]
