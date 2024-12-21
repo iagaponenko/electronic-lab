@@ -1,0 +1,27 @@
+This is a simulation of the tm1638 driver using Icarus Verilog and GTKWave for
+visualizing the signals. Complete documentation can be found in:
+https://steveicarus.github.io/iverilog/
+
+There are 3 basic steps here:
+
+1. Compile the design into an executable file
+
+  *** IMPORTANT ***
+
+  The order the input files are opresented to the compiler matter!
+  The consumers must be in the very end.
+
+  iverilog -DSIMULATION -Wall -g2012 -o bin/tm1638_driver \
+    design/tm1638_types.v \
+    design/tm1638_driver_types.v \
+    design/tm1638_driver.v \
+    design/tm1638_stimulus.v \
+    tb/tm1638_driver_tb.v
+
+2. Run the simulation via the imulation run-time engine
+
+  cd run; ../bintm1638_driver; cd ..
+
+3. Visualize the waveforms
+
+  gtkwave run/tm1638_driver.vcd

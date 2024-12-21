@@ -1,1 +1,4 @@
 */__pycache__
+fpga/tm1638/bin/*
+fpga/tm1638/run/*
+fpga/tm1638/logs/*
