@@ -71,7 +71,7 @@ module fifo
     #(
         // The DEPTH of the FIFO must be a power of 2, such as: 2, 4, 8, 16, etc.
         parameter   DEPTH      = 4,
-        parameter   DATA_WIDTH = 17,
+        parameter   DATA_WIDTH = 18,
         parameter   ADDR_WIDTH = $clog2(DEPTH)
     )(
         // Control signals

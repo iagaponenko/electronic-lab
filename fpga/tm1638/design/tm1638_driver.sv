@@ -28,7 +28,7 @@ module tm1638_driver
 
         // Output data to be sent to TM1638 over SPI
         input               i_SPI_FIFO_Full,    // SPI FIFO full flag (not ready to accept data)
-        output reg [16:0]   o_Data,             // Data to be sent to TM1638
+        output reg [17:0]   o_Data,             // Command or data to be sent to TM1638
 `ifndef SIMULATION
         output reg          o_Write             // Write pulse to indicate the data is ready
 `else

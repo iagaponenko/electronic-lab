@@ -3,7 +3,7 @@
 module fifo_tb;
 
     localparam  DEPTH      = 4;
-    localparam  DATA_WIDTH = 17;
+    localparam  DATA_WIDTH = 18;
     localparam  ADDR_WIDTH = $clog2(DEPTH);
 
     // Control signals

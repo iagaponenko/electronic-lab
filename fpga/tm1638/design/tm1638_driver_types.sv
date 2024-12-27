@@ -19,8 +19,8 @@ typedef enum {
 
 } state_t;
 
-typedef reg [7:0][7:0] segments_t;  // [grid][segment]
-typedef reg [7:0]      leds_t;      // [grid]
+typedef logic [7:0][7:0] segments_t;  // [grid][segment]
+typedef logic [7:0]      leds_t;      // [grid]
 
 endpackage
 

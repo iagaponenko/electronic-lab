@@ -83,7 +83,8 @@ module spi
         // Input data for the SPI device
         output reg          o_Busy,
         input               i_Data_Ready,
-        input [16:0]        i_Data,     // [16]   the flag indicating if the data is required by the command
+        input [17:0]        i_Data,     // [17]   the flag indicating if this is the write command (=1) or the read command (=0)
+                                        // [16]   the flag indicating if the data is required by the command
                                         // [15:8] 8-bit data (if required by the command)
                                         // [7:0]  8-bit command
 
@@ -97,7 +98,7 @@ module spi
 
         // Diagnostic signals
         output reg [2:0]    o_Diag_State,
-        output reg [16:0]   o_Diag_Data,
+        output reg [17:0]   o_Diag_Data,
         output reg [3:0]    o_Diag_Addr
 `endif
     ); 
@@ -160,16 +161,16 @@ module spi
     // Device clock delay control
     always @(posedge i_Clk) begin
         if (i_Rst) begin
-            r_Addr_Delay_Cycles <= 16'h0;
-            r_TX_Delay_Cycles   <= 16'h0;
-            r_Busy_Delay_Cycles <= 16'h0;
+            r_Addr_Delay_Cycles <= 17'h0;
+            r_TX_Delay_Cycles   <= 17'h0;
+            r_Busy_Delay_Cycles <= 17'h0;
         end
         else begin
             case (r_State)
                 LOAD_DATA: begin
-                    r_Addr_Delay_Cycles <= 16'h0;
-                    r_TX_Delay_Cycles   <= 16'h0;
-                    r_Busy_Delay_Cycles <= 16'h0;
+                    r_Addr_Delay_Cycles <= 17'h0;
+                    r_TX_Delay_Cycles   <= 17'h0;
+                    r_Busy_Delay_Cycles <= 17'h0;
                 end
                 DATA_SET_ADDR:
                     if (r_Addr_Delay_Cycles == CYCLES)
@@ -188,7 +189,7 @@ module spi
     end
 
     // Input data path
-    reg [16:0] r_Data;
+    reg [17:0] r_Data;
     always @(posedge i_Clk) begin
         if (i_Rst) begin
             r_Addr <= 4'h0;

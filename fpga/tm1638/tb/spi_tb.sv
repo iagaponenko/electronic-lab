@@ -9,14 +9,14 @@ module spi_tb;
 
     reg         r_Busy;
     reg         r_Data_Ready;
-    reg [16:0]  r_Data;
+    reg [17:0]  r_Data;
 
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
     reg         r_SPI_Dio;
 
     reg [2:0]   r_Diag_State;
-    reg [16:0]  r_Diag_Data;
+    reg [17:0]  r_Diag_Data;
     reg [3:0]   r_Diag_Addr;
 
     spi

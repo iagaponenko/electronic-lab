@@ -10,14 +10,14 @@ module spi_fifo_tb;
 
     reg         r_FIFO_Full;
     reg         r_Data_Valid;
-    reg [16:0]  r_Data;
+    reg [17:0]  r_Data;
 
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
     reg         r_SPI_Dio;
 
     reg         r_Diag_FIFO_Read;
-    reg [16:0]  r_Diag_FIFO_RData;
+    reg [17:0]  r_Diag_FIFO_RData;
     reg         r_Diag_FIFO_Empty;
     reg         r_Diag_SPI_Data_Rdy;
     reg         r_Diag_SPI_Busy;

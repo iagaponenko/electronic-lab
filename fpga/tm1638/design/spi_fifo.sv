@@ -40,7 +40,7 @@ module spi_fifo
         // Input FIFO signals
         output reg          o_FIFO_Full,    // When FIFO is full
         input               i_Data_Valid,   // Latch the data (when the FIFO is not full)
-        input [16:0]         i_Data,        // Data to be latched
+        input [17:0]        i_Data,        // Data to be latched
 
         // Output SPI signals
         output reg          o_SPI_Stb,
@@ -52,7 +52,7 @@ module spi_fifo
 
         // Diagnostic signals
         output reg          o_Diag_FIFO_Read,
-        output reg [16:0]   o_Diag_FIFO_RData,
+        output reg [17:0]   o_Diag_FIFO_RData,
         output reg          o_Diag_FIFO_Empty,
         output reg          o_Diag_SPI_Data_Rdy,
         output reg          o_Diag_SPI_Busy
@@ -60,12 +60,12 @@ module spi_fifo
     );
 
     reg         r_FIFO_Read;
-    reg [16:0]  r_FIFO_RData;
+    reg [17:0]  r_FIFO_RData;
     reg         r_FIFO_Empty;
     reg         r_SPI_Data_Rdy;
     reg         r_SPI_Busy;
 
-    localparam  FIFO_DATA_WIDTH = 17;
+    localparam  FIFO_DATA_WIDTH = 18;
     localparam  FIFO_ADDR_WIDTH = $clog2(FIFO_DEPTH);
 
 `ifdef SIMULATION
@@ -98,7 +98,7 @@ module spi_fifo
 
 `ifdef SIMULATION
     reg [2:0]   r_Diag_SPI_State;
-    reg [16:0]  r_Diag_SPI_Data;
+    reg [17:0]  r_Diag_SPI_Data;
     reg [3:0]   r_Diag_SPI_Addr;
 `endif
     spi

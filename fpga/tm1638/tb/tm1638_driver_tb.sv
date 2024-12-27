@@ -15,7 +15,7 @@ module tm1638_driver_tb;
     reg         r_Segments_Valid;
 
     reg         r_SPI_FIFO_Full;
-    reg [16:0]  r_Data;
+    reg [17:0]  r_Data;
     reg         r_Write;
 
     state_t     r_Diag_State;

@@ -39,7 +39,7 @@ module tm1638
         // Diagnostic signals (this module)
         output reg          o_Diag_Segments_Valid,
         output reg          o_Diag_SPI_FIFO_Full,
-        output reg [16:0]   o_Diag_Data,
+        output reg [17:0]   o_Diag_Data,
         output reg          o_Diag_Data_Valid,
 
         // Diagnostic signals
@@ -278,7 +278,7 @@ module tm1638
     end
 
     reg         r_SPI_FIFO_Full;
-    reg [16:0]  r_Data;
+    reg [17:0]  r_Data;
     reg         r_Data_Valid;
     tm1638_driver
         tm1638_driver_0 (

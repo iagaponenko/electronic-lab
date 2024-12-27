@@ -20,7 +20,7 @@ module tm1638_tb;
     // Diagnostic signals (tm1638)
     reg         r_Diag_Segments_Valid;
     reg         r_Diag_SPI_FIFO_Full;
-    reg [16:0]  r_Diag_Data;
+    reg [17:0]  r_Diag_Data;
     reg         r_Diag_Data_Valid;
 
     // Diagnostic signals (tm1638->driver)
