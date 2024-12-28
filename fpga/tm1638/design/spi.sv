@@ -161,16 +161,16 @@ module spi
     // Device clock delay control
     always @(posedge i_Clk) begin
         if (i_Rst) begin
-            r_Addr_Delay_Cycles <= 17'h0;
-            r_TX_Delay_Cycles   <= 17'h0;
-            r_Busy_Delay_Cycles <= 17'h0;
+            r_Addr_Delay_Cycles <= 16'h0;
+            r_TX_Delay_Cycles   <= 16'h0;
+            r_Busy_Delay_Cycles <= 16'h0;
         end
         else begin
             case (r_State)
                 LOAD_DATA: begin
-                    r_Addr_Delay_Cycles <= 17'h0;
-                    r_TX_Delay_Cycles   <= 17'h0;
-                    r_Busy_Delay_Cycles <= 17'h0;
+                    r_Addr_Delay_Cycles <= 16'h0;
+                    r_TX_Delay_Cycles   <= 16'h0;
+                    r_Busy_Delay_Cycles <= 16'h0;
                 end
                 DATA_SET_ADDR:
                     if (r_Addr_Delay_Cycles == CYCLES)
