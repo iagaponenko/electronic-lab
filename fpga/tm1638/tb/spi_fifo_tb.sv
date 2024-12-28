@@ -35,7 +35,7 @@ module spi_fifo_tb;
 
             .o_SPI_Stb          (r_SPI_Stb),
             .o_SPI_Clk          (r_SPI_Clk),
-            .o_SPI_Dio          (r_SPI_Dio),
+            .io_SPI_Dio         (r_SPI_Dio),
 
             .o_Diag_FIFO_Read   (r_Diag_FIFO_Read),
             .o_Diag_FIFO_RData  (r_Diag_FIFO_RData),

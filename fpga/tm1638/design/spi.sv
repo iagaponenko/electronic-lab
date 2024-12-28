@@ -92,9 +92,9 @@ module spi
         output reg          o_SPI_Stb,
         output reg          o_SPI_Clk,
 `ifndef SIMULATION
-        output reg          o_SPI_Dio
+        inout  reg          io_SPI_Dio
 `else
-        output reg          o_SPI_Dio,
+        inout  reg          io_SPI_Dio,
 
         // Diagnostic signals
         output reg [2:0]    o_Diag_State,
@@ -211,13 +211,21 @@ module spi
     end
 
     // Output data path
-    always @(*) begin
-        case (r_State)
-            DATA_SET_ADDR: o_SPI_Dio = r_Data[r_Addr];
-            DATA_TX:       o_SPI_Dio = r_Data[r_Addr];
-            default:       o_SPI_Dio = 1'b0;
-        endcase
-    end
+    //
+    // always @(*) begin
+    //     case (r_State)
+    //         DATA_SET_ADDR: io_SPI_Dio = r_Data[r_Addr];
+    //         DATA_TX:       io_SPI_Dio = r_Data[r_Addr];
+    //         default:       io_SPI_Dio = 1'b0;
+    //     endcase
+    // end
+    //
+    // IMPORTANT: The procedural assignment code that is commented out above
+    //            wouldn't work for driving the inout port. Hence the continuous
+    //            assignment below is used instead. Note that the port is driven
+    //            only when the SPI device is in the DATA_SET_ADDR or DATA_TX state.
+    //
+    assign io_SPI_Dio = (r_State == DATA_SET_ADDR) || (r_State == DATA_TX) ? r_Data[r_Addr] : 1'bz;
 
 `ifdef SIMULATION
     assign o_Diag_State = r_State;

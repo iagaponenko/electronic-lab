@@ -32,9 +32,9 @@ module tm1638
         output reg          o_SPI_Stb,
         output reg          o_SPI_Clk,
 `ifndef SIMULATION
-        output reg          o_SPI_Dio
+        inout  reg          io_SPI_Dio
 `else
-        output reg          o_SPI_Dio,
+        inout  reg          io_SPI_Dio,
 
         // Diagnostic signals (this module)
         output reg          o_Diag_Segments_Valid,
@@ -316,7 +316,7 @@ module tm1638
 
             .o_SPI_Stb      (o_SPI_Stb),
             .o_SPI_Clk      (o_SPI_Clk),
-            .o_SPI_Dio      (o_SPI_Dio)
+            .io_SPI_Dio     (io_SPI_Dio)
         );
 
 `ifdef SIMULATION

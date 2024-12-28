@@ -31,7 +31,7 @@ module spi_tb;
 
             .o_SPI_Stb      (r_SPI_Stb),
             .o_SPI_Clk      (r_SPI_Clk),
-            .o_SPI_Dio      (r_SPI_Dio),
+            .io_SPI_Dio     (r_SPI_Dio),
 
             .o_Diag_State   (r_Diag_State),
             .o_Diag_Data    (r_Diag_Data),

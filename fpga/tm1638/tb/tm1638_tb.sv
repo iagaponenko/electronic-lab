@@ -40,7 +40,7 @@ module tm1638_tb;
 
             .o_SPI_Stb              (r_SPI_Stb),
             .o_SPI_Clk              (r_SPI_Clk),
-            .o_SPI_Dio              (r_SPI_Dio),
+            .io_SPI_Dio             (r_SPI_Dio),
 
             .o_Diag_Segments_Valid  (r_Diag_Segments_Valid),
             .o_Diag_SPI_FIFO_Full   (r_Diag_SPI_FIFO_Full),

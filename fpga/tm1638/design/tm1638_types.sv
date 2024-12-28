@@ -46,13 +46,22 @@ typedef enum logic {
     DATA_DIR_READ  = 1'b1
 } data_dir_t;
 
-function logic [17:0] make_data_command
-    (   data_dir_t  data_dir  = DATA_DIR_WRITE,
+function logic [17:0] make_write_data_command
+    (   addr_mode_t addr_mode = ADDR_MODE_FIXED,
+        data_mode_t data_mode = DATA_MODE_NORMAL
+    );
+    return _data_command(DATA_DIR_WRITE, addr_mode, data_mode);
+endfunction 
+
+function logic [17:0] make_read_data_command(); return _data_command(DATA_DIR_READ); endfunction 
+
+function logic [17:0] _data_command
+    (   data_dir_t  data_dir,
         addr_mode_t addr_mode = ADDR_MODE_FIXED,
         data_mode_t data_mode = DATA_MODE_NORMAL
     );
     return _make_command(data_dir, COMMAND_NO_DATA, COMMAND_DATA, {2'b00, data_mode, addr_mode, data_dir, 1'b0});
- endfunction 
+endfunction 
 
 typedef logic [2:0] grid_t;
 

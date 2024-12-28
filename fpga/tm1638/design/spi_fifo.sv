@@ -46,9 +46,9 @@ module spi_fifo
         output reg          o_SPI_Stb,
         output reg          o_SPI_Clk,
 `ifndef SIMULATION
-        output reg          o_SPI_Dio
+        inout  reg          io_SPI_Dio
 `else
-        output reg          o_SPI_Dio,
+        inout  reg          io_SPI_Dio,
 
         // Diagnostic signals
         output reg          o_Diag_FIFO_Read,
@@ -114,9 +114,9 @@ module spi_fifo
             .o_SPI_Stb      (o_SPI_Stb),
             .o_SPI_Clk      (o_SPI_Clk),
 `ifndef SIMULATION
-            .o_SPI_Dio      (o_SPI_Dio)
+            .io_SPI_Dio     (io_SPI_Dio)
 `else
-            .o_SPI_Dio      (o_SPI_Dio),
+            .io_SPI_Dio     (io_SPI_Dio),
             .o_Diag_State   (r_Diag_SPI_State),
             .o_Diag_Data    (r_Diag_SPI_Data),
             .o_Diag_Addr    (r_Diag_SPI_Addr)

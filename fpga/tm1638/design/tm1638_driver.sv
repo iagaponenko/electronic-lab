@@ -106,7 +106,7 @@ module tm1638_driver
                 end
 
                 CONTROL_COMMAND_SET: begin
-                    o_Data <= make_data_command();
+                    o_Data <= make_write_data_command();
                 end
 
                 SEG_DATA_COMMAND_SET: begin
@@ -118,7 +118,7 @@ module tm1638_driver
                     //o_Data <= r_Segments[r_Grid];
                     // Ignore the rotated grid counter
                     if (r_Grid != 3'h0) begin
-                        o_Data <= make_data_command();
+                        o_Data <= make_write_data_command();
                     end
                 end
 
@@ -130,7 +130,7 @@ module tm1638_driver
                 LED_ADDR_COMMAND_SET: begin
                     // Ignore the rotated grid counter
                     if (r_Grid != 3'h0) begin
-                        o_Data <= make_data_command();
+                        o_Data <= make_write_data_command();
                     end
                 end
 
