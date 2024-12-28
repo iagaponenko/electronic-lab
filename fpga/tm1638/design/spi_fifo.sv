@@ -27,6 +27,11 @@
 // See specifications of both modules for more details.
 //
 // ------------------------------------------------------------------------------------------
+//
+// The output data is captured in o_Data for 1 clock cycle after the o_Data_Valid is set to
+// high. It's up to the user to read anbd buffer the data if needed.
+//
+// ------------------------------------------------------------------------------------------
 
 module spi_fifo
 
@@ -40,7 +45,11 @@ module spi_fifo
         // Input FIFO signals
         output reg          o_FIFO_Full,    // When FIFO is full
         input               i_Data_Valid,   // Latch the data (when the FIFO is not full)
-        input [17:0]        i_Data,        // Data to be latched
+        input [17:0]        i_Data,         // Data to be latched
+
+        // Output data read from the SPI device
+        output reg          o_Data_Valid,   // The data is ready to be read
+        output reg [63:0]   o_Data,         // 4 bytes read from the SPI after the corresponding command is sent
 
         // Output SPI signals
         output reg          o_SPI_Stb,
@@ -110,6 +119,9 @@ module spi_fifo
             .o_Busy         (r_SPI_Busy),
             .i_Data_Ready   (r_SPI_Data_Rdy),
             .i_Data         (r_FIFO_RData),
+
+            .o_Data_Valid   (o_Data_Valid),
+            .o_Data         (o_Data),
 
             .o_SPI_Stb      (o_SPI_Stb),
             .o_SPI_Clk      (o_SPI_Clk),

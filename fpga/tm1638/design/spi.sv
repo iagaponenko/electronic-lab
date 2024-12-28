@@ -83,10 +83,14 @@ module spi
         // Input data for the SPI device
         output reg          o_Busy,
         input               i_Data_Ready,
-        input [17:0]        i_Data,     // [17]   the flag indicating if this is the write command (=1) or the read command (=0)
-                                        // [16]   the flag indicating if the data is required by the command
-                                        // [15:8] 8-bit data (if required by the command)
-                                        // [7:0]  8-bit command
+        input [17:0]        i_Data,         // [17]   the flag indicating if this is the write command (=1) or the read command (=0)
+                                            // [16]   the flag indicating if the data is required by the command
+                                            // [15:8] 8-bit data (if required by the command)
+                                            // [7:0]  8-bit command
+
+        // Output data read from the SPI device
+        output reg          o_Data_Valid,   // The data is ready to be read
+        output reg [63:0]   o_Data,         // 4 bytes read from the SPI after the corresponding command is sent
 
         // Output SPI signals
         output reg          o_SPI_Stb,
@@ -107,14 +111,18 @@ module spi
     reg [2:0] r_State;
     reg [2:0] r_State_Next;
 
-    reg [15:0] r_Addr_Delay_Cycles;  // up to 64*1024
-    reg [15:0] r_TX_Delay_Cycles;    // up to 64*1024
-    reg [15:0] r_Busy_Delay_Cycles;  // up to 64*1024
+    reg [15:0] r_Addr_Delay_Cycles;     // up to 64*1024
+    reg [15:0] r_TX_Delay_Cycles;       // up to 64*1024
+    reg [15:0] r_Busy_Delay_Cycles;     // up to 64*1024
     reg [3:0]  r_Addr;
-    reg [3:0]  r_Addr_Max;          // The maximum address: 3'd7 if nod data is required by the command
-                                    // or 3'd15 if the data is required by the command.
+    reg [3:0]  r_Addr_Max;              // The maximum address: 3'd7 if nod data is required by the command
+                                        // or 3'd15 if the data is required by the command.
 
-    // Next state computation logic
+    // ----------------------
+    // State transition logic
+    // ----------------------
+
+    // Next state computation
     function [2:0] next(cond, [2:0] if_true, [2:0] if_false);
         if (cond) return if_true;
         else      return if_false;
@@ -145,20 +153,13 @@ module spi
         else       r_State <= r_State_Next;
     end
 
+    // Busy signal is determined by the current state
     assign o_Busy = (r_State == LOAD_DATA) || (r_State == DATA_SET_ADDR) || (r_State == DATA_TX) || (r_State == PAUSE);
 
-    // Strobe (enable) signal
-    assign o_SPI_Stb = ~((r_State == DATA_SET_ADDR) || (r_State == DATA_TX));
-
-    // Device clock
-    always @(*) begin
-        case (r_State)
-            DATA_SET_ADDR: o_SPI_Clk = 1'b0;
-            default:       o_SPI_Clk = 1'b1;
-        endcase
-    end
-
+    // --------------------------
     // Device clock delay control
+    // --------------------------
+
     always @(posedge i_Clk) begin
         if (i_Rst) begin
             r_Addr_Delay_Cycles <= 16'h0;
@@ -188,7 +189,10 @@ module spi
         end
     end
 
+    // ---------------
     // Input data path
+    // ---------------
+
     reg [17:0] r_Data;
     always @(posedge i_Clk) begin
         if (i_Rst) begin
@@ -210,8 +214,33 @@ module spi
         end
     end
 
+    // ----------------
     // Output data path
-    //
+    // ----------------
+
+    // TODO: The data is not read from the SPI device yet. The data is just a placeholder.
+    // In order to do so the current state machines need to be extended to read 4 bytes of
+    // data from the SPI device after the command is sent. Note that each bit is read on
+    // the rising edge of the SPI clock. The data validity signal o_Data_Valid should be set
+    // to high for a duration of one clock on the rising edge of the clock when the data is
+    // ready to be read.
+
+    assign o_Data_Valid = 1'b0;
+    assign o_Data = 64'h0;
+
+    // -----------
+    // SPI signals
+    // -----------
+
+    assign o_SPI_Stb = ~((r_State == DATA_SET_ADDR) || (r_State == DATA_TX));
+
+    always @(*) begin
+        case (r_State)
+            DATA_SET_ADDR: o_SPI_Clk = 1'b0;
+            default:       o_SPI_Clk = 1'b1;
+        endcase
+    end
+
     // always @(*) begin
     //     case (r_State)
     //         DATA_SET_ADDR: io_SPI_Dio = r_Data[r_Addr];

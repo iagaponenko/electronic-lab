@@ -12,6 +12,9 @@ module spi_fifo_tb;
     reg         r_Data_Valid;
     reg [17:0]  r_Data;
 
+    reg         r_Out_Data_Valid;
+    reg [63:0]  r_Out_Data;
+
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
     reg         r_SPI_Dio;
@@ -32,6 +35,9 @@ module spi_fifo_tb;
             .o_FIFO_Full        (r_FIFO_Full),
             .i_Data_Valid       (r_Data_Valid),
             .i_Data             (r_Data),
+
+            .o_Data_Valid       (r_Out_Data_Valid),
+            .o_Data             (r_Out_Data),
 
             .o_SPI_Stb          (r_SPI_Stb),
             .o_SPI_Clk          (r_SPI_Clk),

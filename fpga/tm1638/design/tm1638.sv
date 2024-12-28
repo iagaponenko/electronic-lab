@@ -303,6 +303,11 @@ module tm1638
 `endif
         );
 
+    // These signals represents keys pressed on the TM1638. The signals are not used
+    // yet in this design. They still need to be debounced and processed.
+    reg         r_Out_Data_Valid;
+    reg [63:0]  r_Out_Data;
+
     spi_fifo
         #(  .SPI_CYCLES (SPI_CYCLES),
             .FIFO_DEPTH (FIFO_DEPTH)
@@ -313,6 +318,9 @@ module tm1638
             .o_FIFO_Full    (r_SPI_FIFO_Full),
             .i_Data_Valid   (r_Data_Valid),
             .i_Data         (r_Data),
+
+            .o_Data_Valid   (r_Out_Data_Valid),
+            .o_Data         (r_Out_Data),
 
             .o_SPI_Stb      (o_SPI_Stb),
             .o_SPI_Clk      (o_SPI_Clk),
