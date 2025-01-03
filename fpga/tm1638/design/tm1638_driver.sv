@@ -58,7 +58,10 @@ module tm1638_driver
         case (r_State)
             IDLE:                       r_State_Next = next(i_Valid,         INPUT_LATCHED,             IDLE);
             INPUT_LATCHED:              r_State_Next = next(i_SPI_FIFO_Full, INPUT_LATCHED,             CONTROL_COMMAND_SET);
-            CONTROL_COMMAND_SET:        r_State_Next = next(i_SPI_FIFO_Full, WAIT_SEG_DATA_COMMAND_SET, SEG_DATA_COMMAND_SET);
+            CONTROL_COMMAND_SET:        r_State_Next = next(i_SPI_FIFO_Full, WAIT_KEY_READ_COMMAND_SET, KEY_READ_COMMAND_SET);
+
+            WAIT_KEY_READ_COMMAND_SET:  r_State_Next = next(i_SPI_FIFO_Full, WAIT_KEY_READ_COMMAND_SET, KEY_READ_COMMAND_SET);
+            KEY_READ_COMMAND_SET:       r_State_Next = next(i_SPI_FIFO_Full, WAIT_SEG_DATA_COMMAND_SET, SEG_DATA_COMMAND_SET);
 
             WAIT_SEG_DATA_COMMAND_SET:  r_State_Next = next(i_SPI_FIFO_Full, WAIT_SEG_DATA_COMMAND_SET, SEG_DATA_COMMAND_SET);
             SEG_DATA_COMMAND_SET:       r_State_Next = next(i_SPI_FIFO_Full, WAIT_SEG_ADDR_COMMAND_SET, SEG_ADDR_COMMAND_SET);
@@ -106,6 +109,10 @@ module tm1638_driver
                 end
 
                 CONTROL_COMMAND_SET: begin
+                    o_Data <= make_read_data_command();
+                end
+
+                KEY_READ_COMMAND_SET: begin
                     o_Data <= make_write_data_command();
                 end
 
@@ -139,6 +146,7 @@ module tm1638_driver
     end
 
     assign o_Write = (r_State == CONTROL_COMMAND_SET) ||
+                     (r_State == KEY_READ_COMMAND_SET) ||
                      (r_State == SEG_DATA_COMMAND_SET) ||
                      (r_State == SEG_ADDR_COMMAND_SET) ||
                      (r_State == LED_DATA_COMMAND_SET) ||

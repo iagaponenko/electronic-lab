@@ -6,8 +6,10 @@ module tm1638_tb;
     import tm1638_types::*;
 
     localparam  STIMUL_CLK_CYCLES_DELAY = 10;
-    localparam  SPI_CYCLES              = 0;
-    localparam  FIFO_DEPTH              = 8;
+    localparam  SPI_CYCLES              = 1;
+    localparam  SPI_READ_DELAY_CYCLES   = 1;
+    localparam  SPI_READ_WIDTH          = 8;
+    localparam  FIFO_DEPTH              = 2;
 
     reg         r_Rst;
     reg         r_Clk;
@@ -32,6 +34,8 @@ module tm1638_tb;
     tm1638
         #(  .STIMUL_CLK_CYCLES_DELAY    (STIMUL_CLK_CYCLES_DELAY),
             .SPI_CYCLES                 (SPI_CYCLES),
+            .SPI_READ_DELAY_CYCLES      (SPI_READ_DELAY_CYCLES),
+            .SPI_READ_WIDTH             (SPI_READ_WIDTH),
             .FIFO_DEPTH                 (FIFO_DEPTH)
         ) tm1638_0 (
             .i_Rst                  (r_Rst),
@@ -65,7 +69,7 @@ module tm1638_tb;
     initial begin
         init();
         @(negedge r_Clk) r_Rst = 1'b0;
-        repeat(2000) @(negedge r_Clk);
+        repeat(10000) @(negedge r_Clk);
         $finish;
     end
 

@@ -3,6 +3,8 @@
 module spi_fifo_tb;
 
     localparam  SPI_CYCLES = 0;
+    localparam  SPI_READ_DELAY_CYCLES = 0;
+    localparam  SPI_READ_WIDTH = 8;
     localparam  FIFO_DEPTH = 2;
 
     reg         r_Rst;
@@ -12,8 +14,8 @@ module spi_fifo_tb;
     reg         r_Data_Valid;
     reg [17:0]  r_Data;
 
-    reg         r_Out_Data_Valid;
-    reg [63:0]  r_Out_Data;
+    reg                         r_Out_Data_Valid;
+    reg [SPI_READ_WIDTH-1:0]    r_Out_Data;
 
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
@@ -26,9 +28,11 @@ module spi_fifo_tb;
     reg         r_Diag_SPI_Busy;
 
     spi_fifo
-        #(  .SPI_CYCLES     (SPI_CYCLES),
-            .FIFO_DEPTH     (FIFO_DEPTH)
-        ) spi_fifo_diag_0 (
+        #(  .SPI_CYCLES             (SPI_CYCLES),
+            .SPI_READ_DELAY_CYCLES  (SPI_READ_DELAY_CYCLES),
+            .SPI_READ_WIDTH         (SPI_READ_WIDTH),
+            .FIFO_DEPTH             (FIFO_DEPTH)
+        ) spi_fifo_0 (
             .i_Rst              (r_Rst),
             .i_Clk              (r_Clk),
 

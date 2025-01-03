@@ -36,6 +36,8 @@
 module spi_fifo
 
     #(  parameter   SPI_CYCLES = 1,
+        parameter   SPI_READ_DELAY_CYCLES = 1,  // The number of cycles to wait before reading the data from the SPI device
+        parameter   SPI_READ_WIDTH = 32,        // The width of the data read from the SPI device (must be a power of 2)
         parameter   FIFO_DEPTH = 4
     )(
         // Control signals
@@ -48,8 +50,8 @@ module spi_fifo
         input [17:0]        i_Data,         // Data to be latched
 
         // Output data read from the SPI device
-        output reg          o_Data_Valid,   // The data is ready to be read
-        output reg [63:0]   o_Data,         // 4 bytes read from the SPI after the corresponding command is sent
+        output reg                      o_Data_Valid,   // The data is ready to be read
+        output reg [SPI_READ_WIDTH-1:0] o_Data,         // Data read from the SPI after the corresponding command is sent
 
         // Output SPI signals
         output reg          o_SPI_Stb,
@@ -111,7 +113,9 @@ module spi_fifo
     reg [3:0]   r_Diag_SPI_Addr;
 `endif
     spi
-        #(  .CYCLES (SPI_CYCLES)
+        #(  .CYCLES             (SPI_CYCLES),
+            .READ_DELAY_CYCLES  (SPI_READ_DELAY_CYCLES),
+            .READ_WIDTH         (SPI_READ_WIDTH)
         ) spi_0 (
             .i_Rst          (i_Rst),
             .i_Clk          (i_Clk),

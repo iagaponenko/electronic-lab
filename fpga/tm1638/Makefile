@@ -77,7 +77,8 @@ tm1638_driver_files := \
 	design/tm1638_driver_types.sv \
 	design/tm1638_driver.sv \
 	design/tm1638_stimulus.sv \
-	design/tm1638_stimulus_fixed.sv
+	design/tm1638_stimulus_fixed.sv \
+	design/tm1638_stimulus_keys.sv
 
 bin/tm1638_driver: $(tm1638_driver_files) tb/tm1638_driver_tb.sv
 	mkdir -p bin

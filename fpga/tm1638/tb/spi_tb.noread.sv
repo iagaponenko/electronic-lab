@@ -3,8 +3,6 @@
 module spi_tb;
 
     localparam  CYCLES = 1;
-    localparam  READ_DELAY_CYCLES = 1;
-    localparam  READ_WIDTH = 8;
 
     reg         r_Rst;
     reg         r_Clk;
@@ -13,8 +11,8 @@ module spi_tb;
     reg         r_Data_Ready;
     reg [17:0]  r_Data;
 
-    reg                     r_Out_Data_Valid;
-    reg [READ_WIDTH-1:0]    r_Out_Data;
+    reg         r_Out_Data_Valid;
+    reg [63:0]  r_Out_Data;
 
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
@@ -25,9 +23,7 @@ module spi_tb;
     reg [3:0]   r_Diag_Addr;
 
     spi
-        #(  .CYCLES             (CYCLES),
-            .READ_DELAY_CYCLES  (READ_DELAY_CYCLES),
-            .READ_WIDTH         (READ_WIDTH)
+        #(  .CYCLES         (CYCLES)
         ) spi_0 (
             .i_Rst          (r_Rst),
             .i_Clk          (r_Clk),
@@ -54,14 +50,6 @@ module spi_tb;
         end
     endtask
 
-    task send_data (input [17:0] data);
-        wait_for_busy;
-        r_Data       = data;
-        r_Data_Ready = 1;
-        @(negedge r_Clk);
-        r_Data_Ready = 0;
-    endtask
-
     initial begin
         $dumpfile("spi.vcd");
         $dumpvars(0);
@@ -72,12 +60,21 @@ module spi_tb;
 
         @(negedge r_Clk) r_Rst = 0;
 
-        send_data(18'b00_00000000_00000001);
-        send_data(18'b01_10000000_00000010);
-        send_data(18'b10_00000010_00000010);    // read 32 bit data after sending the 8-bit command
+        wait_for_busy;
 
-        //wait_for_busy;
-        repeat (200) @(negedge r_Clk);
+        r_Data       = 18'b00_00000001_00000001;
+        r_Data_Ready = 1;
+        @(negedge r_Clk);
+        r_Data_Ready = 0;
+
+        wait_for_busy;
+
+        r_Data       = 18'b01_10000000_10000000;
+        r_Data_Ready = 1;
+        @(negedge r_Clk);
+        r_Data_Ready = 0;
+
+        wait_for_busy;
 
         $finish;
     end

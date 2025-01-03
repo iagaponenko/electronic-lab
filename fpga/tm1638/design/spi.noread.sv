@@ -22,7 +22,7 @@
 //
 // --------------------------------------------------------------------------------------------
 //
-// There are 18 bits in the input data, Where:
+// There are 17 bits in the input data, Where:
 //
 //   [17]   the flag indicating if this is the write command (=1) or the read command (=0)
 //   [16]   == 1'b1 if the command has data
@@ -71,31 +71,11 @@
 // signal is set to high.
 //
 // ---------------------------------------------------------------------------------------------
-//
-// When reading from the SPI device the data is available for at least one period starting
-// on @posedge(i_Clk) when o_Data_Valid is high. The data is valid for one period only.
-// It's recommented to read the data on @negedge(i_Clk) if o_Data_Valid is set to high.
-// Note that the i_Data_Ready signal will be still set to high as shown below:
-//
-//                     ___     ___     ___ 
-//   i_Clk:        ___|   |___|   |___|   |___
-//                        :
-//                 _______:___________
-//   o_Busy:              :           |_______________
-//                     ___:___
-//   o_Data_Valid: ___|   :   |___________________
-//                        :
-//   o_Data:           XXXXXXX
-//
-// ---------------------------------------------------------------------------------------------
 
 module spi
 
     #(
-        parameter   CYCLES = 1,
-        parameter   READ_DELAY_CYCLES = 1,  // The number of cycles to wait before reading the data from the SPI device
-        parameter   READ_WIDTH = 32         // The width of the data read from the SPI device (must be a power of 2)
-
+        parameter   CYCLES = 1
     )(
         // Control signals
         input               i_Rst,
@@ -110,8 +90,8 @@ module spi
                                             // [7:0]  8-bit command
 
         // Output data read from the SPI device
-        output reg                  o_Data_Valid,   // The data is ready to be read
-        output reg [READ_WIDTH-1:0] o_Data,         // Data read from the SPI after the corresponding command is sent
+        output reg          o_Data_Valid,   // The data is ready to be read
+        output reg [63:0]   o_Data,         // 4 bytes read from the SPI after the corresponding command is sent
 
         // Output SPI signals
         output reg          o_SPI_Stb,
@@ -128,31 +108,16 @@ module spi
 `endif
     ); 
 
-    localparam  IDLE = 0,
-                LOAD_DATA = 1,
-                DATA_SET_ADDR = 2,
-                DATA_TX = 3,
-                PAUSE_BEFORE_READ = 4,
-                DATA_SET_RX_ADDR = 5,
-                DATA_RX = 6,
-                PAUSE = 7;
+    localparam IDLE = 0, LOAD_DATA = 1, DATA_SET_ADDR = 2, DATA_TX = 3, PAUSE = 4; 
     reg [2:0] r_State;
     reg [2:0] r_State_Next;
 
     reg [15:0] r_Addr_Delay_Cycles;     // up to 64*1024
     reg [15:0] r_TX_Delay_Cycles;       // up to 64*1024
-    reg [3:0]  r_Addr;
-    reg [3:0]  r_Addr_Max;              // The maximum address: 4'd7 if nod data is required by the command
-                                        // or 4'd15 if the data is required by the command.
-
-    localparam READ_ADDR_WIDTH = $clog2(READ_WIDTH);
-
-    reg [15:0]                  r_Read_Delay_Cycles;    // up to 64*1024
-    reg [15:0]                  r_RX_Addr_Delay_Cycles; // up to 64*1024
-    reg [15:0]                  r_RX_Delay_Cycles;      // up to 64*1024
-    reg [READ_ADDR_WIDTH-1:0]   r_RX_Addr;              // 0 .. READ_WIDTH-1
-
     reg [15:0] r_Busy_Delay_Cycles;     // up to 64*1024
+    reg [3:0]  r_Addr;
+    reg [3:0]  r_Addr_Max;              // The maximum address: 3'd7 if nod data is required by the command
+                                        // or 3'd15 if the data is required by the command.
 
     // ----------------------
     // State transition logic
@@ -174,20 +139,8 @@ module spi
                 r_State_Next = next(r_Addr_Delay_Cycles == CYCLES, DATA_TX, DATA_SET_ADDR);
             DATA_TX:
                 r_State_Next = next(r_TX_Delay_Cycles == CYCLES, 
-                                    next(r_Addr == r_Addr_Max,
-                                         next(r_Data[17],
-                                              PAUSE_BEFORE_READ,
-                                              PAUSE),
-                                         DATA_SET_ADDR),
+                                    next(r_Addr == r_Addr_Max, PAUSE, DATA_SET_ADDR),
                                     DATA_TX);
-            PAUSE_BEFORE_READ:
-                r_State_Next = next(r_Read_Delay_Cycles == READ_DELAY_CYCLES, DATA_SET_RX_ADDR, PAUSE_BEFORE_READ);
-            DATA_SET_RX_ADDR:
-                r_State_Next = next(r_RX_Addr_Delay_Cycles == CYCLES, DATA_RX, DATA_SET_RX_ADDR);
-            DATA_RX:
-                r_State_Next = next(r_RX_Delay_Cycles == CYCLES, 
-                                    next(r_RX_Addr == READ_WIDTH - 1, PAUSE, DATA_SET_RX_ADDR),
-                                    DATA_RX);
             PAUSE:
                 r_State_Next = next(r_Busy_Delay_Cycles == CYCLES, IDLE, PAUSE);
             default:
@@ -202,7 +155,7 @@ module spi
     end
 
     // Busy signal is determined by the current state
-    assign o_Busy = r_State != IDLE;
+    assign o_Busy = (r_State == LOAD_DATA) || (r_State == DATA_SET_ADDR) || (r_State == DATA_TX) || (r_State == PAUSE);
 
     // --------------------------
     // Device clock delay control
@@ -210,22 +163,16 @@ module spi
 
     always @(posedge i_Clk) begin
         if (i_Rst) begin
-            r_Addr_Delay_Cycles    <= 16'h0;
-            r_TX_Delay_Cycles      <= 16'h0;
-            r_Busy_Delay_Cycles    <= 16'h0;
-            r_Read_Delay_Cycles    <= 16'h0;
-            r_RX_Addr_Delay_Cycles <= 16'h0;
-            r_RX_Delay_Cycles      <= 16'h0;
+            r_Addr_Delay_Cycles <= 16'h0;
+            r_TX_Delay_Cycles   <= 16'h0;
+            r_Busy_Delay_Cycles <= 16'h0;
         end
         else begin
             case (r_State)
                 LOAD_DATA: begin
-                    r_Addr_Delay_Cycles    <= 16'h0;
-                    r_TX_Delay_Cycles      <= 16'h0;
-                    r_RX_Addr_Delay_Cycles <= 16'h0;
-                    r_RX_Delay_Cycles      <= 16'h0;
-                    r_Busy_Delay_Cycles    <= 16'h0;
-                    r_Read_Delay_Cycles    <= 16'h0;
+                    r_Addr_Delay_Cycles <= 16'h0;
+                    r_TX_Delay_Cycles   <= 16'h0;
+                    r_Busy_Delay_Cycles <= 16'h0;
                 end
                 DATA_SET_ADDR:
                     if (r_Addr_Delay_Cycles == CYCLES)
@@ -237,18 +184,6 @@ module spi
                         r_Addr_Delay_Cycles <= 16'h0;
                     else
                         r_TX_Delay_Cycles <= r_TX_Delay_Cycles + 1'b1;
-                PAUSE_BEFORE_READ:
-                    r_Read_Delay_Cycles <= r_Read_Delay_Cycles + 1'b1;
-                DATA_SET_RX_ADDR:
-                    if (r_RX_Addr_Delay_Cycles == CYCLES)
-                        r_RX_Addr_Delay_Cycles <= 16'h0;
-                    else
-                        r_RX_Addr_Delay_Cycles <= r_RX_Addr_Delay_Cycles + 1'b1;
-                DATA_RX:
-                    if (r_RX_Delay_Cycles == CYCLES)
-                        r_RX_Delay_Cycles <= 16'h0;
-                    else
-                        r_RX_Delay_Cycles <= r_RX_Delay_Cycles + 1'b1;
                 PAUSE:
                     r_Busy_Delay_Cycles <= r_Busy_Delay_Cycles + 1'b1;
             endcase
@@ -284,75 +219,26 @@ module spi
     // Output data path
     // ----------------
 
-    always @(posedge i_Clk) begin
-        if (i_Rst) begin
-`ifndef SIMULATION
-            o_Data <= '0;
-`else
-            // Setting the output data to 'z in the simulation mode helps vizualizing the data
-            // changes during the simulation.
-            o_Data <= 'z;
-`endif
-            o_Data_Valid <= 1'b0;
-            r_RX_Addr <= '0;
-        end
-        else begin
-            // Make sure the data ready flag is reset after 1 clock cycle
-            o_Data_Valid <= 1'b0;
+    // TODO: The data is not read from the SPI device yet. The data is just a placeholder.
+    // In order to do so the current state machines need to be extended to read 4 bytes of
+    // data from the SPI device after the command is sent. Note that each bit is read on
+    // the rising edge of the SPI clock. The data validity signal o_Data_Valid should be set
+    // to high for a duration of one clock on the rising edge of the clock when the data is
+    // ready to be read.
 
-            case (r_State)
-                LOAD_DATA: begin
-`ifndef SIMULATION
-                    o_Data <= '0;
-`else
-                    // Setting the output data to 'z in the simulation mode helps vizualizing the data
-                    // changes during the simulation.
-                    o_Data <= 'z;
-`endif
-                    r_RX_Addr <= '0;
-                end
-                DATA_SET_RX_ADDR: begin
-                    if (r_RX_Addr_Delay_Cycles == CYCLES) begin
-`ifndef SIMULATION
-                        // Sample the data signal from the SPI device
-                        o_Data[r_RX_Addr] <= io_SPI_Dio;
-`else
-                        // Simulate reading the current state of the data signal from SPI device.
-                        // The resulting signal will be a sequnce of 0s and 1s.
-                        o_Data[r_RX_Addr] <= r_RX_Addr[0];
-`endif
-                    end
-                end
-                DATA_RX: begin
-                    if (r_RX_Delay_Cycles == CYCLES) begin
-                        r_RX_Addr <= r_RX_Addr + 1'b1;
-                        // The data is ready for a duration of 1 clock cycle after the last bit
-                        // was read.
-                        if (r_RX_Addr == READ_WIDTH - 1) begin
-                            o_Data_Valid <= 1'b1;
-                        end
-                    end
-                 end
-            endcase
-        end
-    end
-
+    assign o_Data_Valid = 1'b0;
+    assign o_Data = 32'h0;
 
     // -----------
     // SPI signals
     // -----------
 
-    assign o_SPI_Stb = ~((r_State == DATA_SET_ADDR) ||
-                         (r_State == DATA_TX) ||
-                         (r_State == PAUSE_BEFORE_READ) ||
-                         (r_State == DATA_RX) ||
-                         (r_State == DATA_SET_RX_ADDR));
+    assign o_SPI_Stb = ~((r_State == DATA_SET_ADDR) || (r_State == DATA_TX));
 
     always @(*) begin
         case (r_State)
-            DATA_SET_ADDR:    o_SPI_Clk = 1'b0;
-            DATA_SET_RX_ADDR: o_SPI_Clk = 1'b0;
-            default:          o_SPI_Clk = 1'b1;
+            DATA_SET_ADDR: o_SPI_Clk = 1'b0;
+            default:       o_SPI_Clk = 1'b1;
         endcase
     end
 

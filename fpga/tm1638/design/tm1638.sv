@@ -11,11 +11,15 @@ module tm1638
 `ifdef SIMULATION
         parameter   STIMUL_CLK_CYCLES_DELAY = 0,
         parameter   SPI_CYCLES = 1,
+        parameter   SPI_READ_DELAY_CYCLES = 1,  // The number of cycles to wait before reading the data from the SPI device
+        parameter   SPI_READ_WIDTH = 8,         // The width of the data read from the SPI device (must be a power of 2)
         parameter   FIFO_DEPTH = 4
 `else
         // GOWIN Tang Nano 20K FPGA. 27 MHz clock.
         parameter   STIMUL_CLK_CYCLES_DELAY = 5_400_000,    // 27 MHz ->   5 Hz update frequency
         parameter   SPI_CYCLES = 200,                       // 27 MHz -> ~67 kHz SPI clock
+        parameter   SPI_READ_DELAY_CYCLES = 200,            // The number of cycles to wait before reading the data from the SPI device (about 7.4 us for 27 MHz, or 2 us for 100 MHz)
+        parameter   SPI_READ_WIDTH = 32,                    // The width of the data read from the SPI device (must be a power of 2)
         parameter   FIFO_DEPTH = 16,
         parameter   DEBOUNCE_CYCLES = 27_000                // 27 MHz ->   1 kHz debounce frequency (1 ms)
 `endif
@@ -51,7 +55,10 @@ module tm1638
     );
 
 `ifndef SIMULATION
-    assign o_Clk = i_Clk;
+    //assign o_Clk = i_Clk;
+    //assign o_Clk = r_Out_Data_Valid;
+    //assign o_Clk = r_Data[17];
+    assign o_Clk = r_Out_Data[0];
 `endif
 
     localparam S0 = 8'b00111111;
@@ -172,16 +179,24 @@ module tm1638
             .o_Valid    (r_Segments_Valid_6)
         );
 
+    // These signals represents keys pressed on the TM1638.
+    // NOTE: They still need to be debounced and processed.
+    reg                         r_Out_Data_Valid;
+    reg [SPI_READ_WIDTH-1:0]    r_Out_Data;
+
     segments_t  r_Segments_7;
     leds_t      r_Leds_7;
     reg         r_Segments_Valid_7;
-    tm1638_stimulus_fixed
+    tm1638_stimulus_keys
         #(  .STIMUL_CLK_CYCLES_DELAY    (STIMUL_CLK_CYCLES_DELAY),
-            .SEG                        (S6),
+            .SPI_READ_WIDTH             (SPI_READ_WIDTH),
             .LEDS                       (8'b00000010)
         ) tm1638_stimulus_7 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
+
+            .i_Data_Valid   (r_Out_Data_Valid),
+            .i_Data         (r_Out_Data),
 
             .o_Segments (r_Segments_7),
             .o_Leds     (r_Leds_7),
@@ -303,13 +318,10 @@ module tm1638
 `endif
         );
 
-    // These signals represents keys pressed on the TM1638. The signals are not used
-    // yet in this design. They still need to be debounced and processed.
-    reg         r_Out_Data_Valid;
-    reg [63:0]  r_Out_Data;
-
     spi_fifo
-        #(  .SPI_CYCLES (SPI_CYCLES),
+        #(  .SPI_CYCLES             (SPI_CYCLES),
+            .SPI_READ_DELAY_CYCLES  (SPI_READ_DELAY_CYCLES),
+            .SPI_READ_WIDTH         (SPI_READ_WIDTH),
             .FIFO_DEPTH (FIFO_DEPTH)
         ) spi_fifo_0 (
             .i_Rst          (i_Rst),

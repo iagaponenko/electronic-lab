@@ -24,7 +24,7 @@ module tm1638_driver_tb;
     leds_t      r_Diag_Leds;
 
     tm1638_driver
-        tm1638_driver_diag_0 (
+        tm1638_driver_0 (
             .i_Rst          (r_Rst),
             .i_Clk          (r_Clk),
 
@@ -55,7 +55,7 @@ module tm1638_driver_tb;
 
     function void init();
         $dumpfile("tm1638_driver.vcd");
-        $dumpvars(2);
+        $dumpvars(0);
         $monitor("%d: r_Segments: %b r_Leds: %b", $time, r_Segments, r_Leds);
         r_Rst           = 1'b1;
         r_Clk           = 1'b0;
