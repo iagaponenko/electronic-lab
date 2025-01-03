@@ -50,14 +50,6 @@ module spi_tb;
         end
     endtask
 
-    task send_data (input [17:0] data);
-        wait_for_busy;
-        r_Data       = data;
-        r_Data_Ready = 1;
-        @(negedge r_Clk);
-        r_Data_Ready = 0;
-    endtask
-
     initial begin
         $dumpfile("spi.vcd");
         $dumpvars(0);
@@ -68,9 +60,19 @@ module spi_tb;
 
         @(negedge r_Clk) r_Rst = 0;
 
-        send_data(18'b00_00000001_00000001);
-        send_data(18'b01_10000000_10000000);
-        send_data(18'b10_00000010_00000010);
+        wait_for_busy;
+
+        r_Data       = 18'b00_00000001_00000001;
+        r_Data_Ready = 1;
+        @(negedge r_Clk);
+        r_Data_Ready = 0;
+
+        wait_for_busy;
+
+        r_Data       = 18'b01_10000000_10000000;
+        r_Data_Ready = 1;
+        @(negedge r_Clk);
+        r_Data_Ready = 0;
 
         wait_for_busy;
 
