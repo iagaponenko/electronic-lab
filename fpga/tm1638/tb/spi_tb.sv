@@ -4,7 +4,7 @@ module spi_tb;
 
     localparam  CYCLES = 1;
     localparam  READ_DELAY_CYCLES = 1;
-    localparam  READ_WIDTH = 8;
+    localparam  READ_WIDTH = 32;
 
     reg         r_Rst;
     reg         r_Clk;
@@ -13,7 +13,6 @@ module spi_tb;
     reg         r_Data_Ready;
     reg [17:0]  r_Data;
 
-    reg                     r_Out_Data_Valid;
     reg [READ_WIDTH-1:0]    r_Out_Data;
 
     reg         r_SPI_Stb;
@@ -36,7 +35,6 @@ module spi_tb;
             .i_Data_Ready   (r_Data_Ready),
             .i_Data         (r_Data),
 
-            .o_Data_Valid   (r_Out_Data_Valid),
             .o_Data         (r_Out_Data),
 
             .o_SPI_Stb      (r_SPI_Stb),
@@ -75,8 +73,10 @@ module spi_tb;
         send_data(18'b00_00000000_00000001);
         send_data(18'b01_10000000_00000010);
         send_data(18'b10_00000010_00000010);    // read 32 bit data after sending the 8-bit command
+        send_data(18'b01_10000000_00000100);
+        send_data(18'b10_00000010_00001000);    // read 32 bit data after sending the 8-bit command
 
-        //wait_for_busy;
+        wait_for_busy;
         repeat (200) @(negedge r_Clk);
 
         $finish;

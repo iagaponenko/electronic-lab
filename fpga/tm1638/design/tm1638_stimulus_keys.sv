@@ -10,16 +10,14 @@ module tm1638_stimulus_keys
 
     #(
         parameter   STIMUL_CLK_CYCLES_DELAY = 0,
-        parameter   SPI_READ_WIDTH = 32,            // The width of the data read from the SPI device (must be a power of 2)
-        parameter   LEDS = 8'h00
+        parameter   SPI_READ_WIDTH          = 32    // The width of the data read from the SPI device (must be a power of 2)
     )(
         // Control signals
         input   i_Rst,
         input   i_Clk,
 
         // Input data (values of keys) read from the SPI device
-        input reg                       i_Data_Valid,   // The data is ready to be read
-        input reg [SPI_READ_WIDTH-1:0]  i_Data,         // Data read from the SPI after the corresponding command is sent
+        input reg [SPI_READ_WIDTH-1:0]  i_Data, // Data read from the SPI after the corresponding command is sent
 
         // Output data for the 7-segment display (8 digits, 8 segments) and LEDs above the digits
         output segments_t   o_Segments, // [grid][segment]
@@ -44,10 +42,8 @@ module tm1638_stimulus_keys
             else begin
                 if (r_Cycles == STIMUL_CLK_CYCLES_DELAY) begin
                     r_Cycles   <= 0;
-                    o_Segments <= '1;
-                    o_Leds <= LEDS;
-                    //o_Segments <= {i_Data,i_Data};
-                    //o_Leds     <= {i_Data[0],i_Data[3]};
+                    o_Segments <= {i_Data,i_Data};
+                    o_Leds     <= {i_Data[0],i_Data[4],i_Data[8],i_Data[12],i_Data[16],i_Data[20],i_Data[24],i_Data[28]};
                     r_Valid    <= 1'b1;
                 end
                 else begin

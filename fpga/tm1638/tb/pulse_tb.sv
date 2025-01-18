@@ -2,33 +2,33 @@
 
 module pulse_tb;
 
-    reg         r_Rst;
-    reg         r_Clk;
-    reg         r_Data;
-    reg         r_Pulse;
+    parameter RESET_CYCLES = 2;
+
+    reg r_Rst;
+    reg r_Clk;
+    reg r_Data;
+    reg r_Pulse;
+    reg r_Pulse_Series;
 
     // Make pulses on the falling edge of the clock.
-    pulse pulse_0 (
+    pulse
+    pulse_0 (
         .i_Rst  (r_Rst),
         .i_Clk  (r_Clk),
         .i_Data (r_Data),
         .o_Data (r_Pulse)
     );
 
-    reg         r_Pulse_P;
 
-    // Make pulses on the rising edge of the clock by inverting the clock.
-    pulse pulse_1 (
+    // Make a series of pulses
+    pulse #(
+        .RESET_CYCLES   (RESET_CYCLES))
+    pulse_1 (
         .i_Rst  (r_Rst),
-        .i_Clk  (~r_Clk),
+        .i_Clk  (r_Clk),
         .i_Data (r_Data),
-        .o_Data (r_Pulse_P)
+        .o_Data (r_Pulse_Series)
     );
-
-    // Make the half-period pulses. Note that this implementation doesn't guarantee that the
-    // pulse will happen on a specific edge of the clock. It will happen on the edge of the delayed
-    // pulse. See the simulation waveform for more details.
-    wire r_Pulse_Half_Period = r_Pulse & r_Pulse_P;
 
     function void init();
         $dumpfile("pulse.vcd");
@@ -41,7 +41,7 @@ module pulse_tb;
     initial begin
         init();
         #1 r_Rst = 1'b0;
-        #200 $finish;
+        #400 $finish;
     end
 
     always begin
@@ -52,8 +52,9 @@ module pulse_tb;
         #1 r_Clk = ~r_Clk;
     end
     always begin
-        forever #($urandom_range(15, 30) * 1ns) begin
-            r_Rst = ~r_Rst;
+        forever #($urandom_range(30, 80) * 1ns) begin
+            r_Rst = 1'b1;
+            #5 r_Rst = 1'b0;
         end
     end
 

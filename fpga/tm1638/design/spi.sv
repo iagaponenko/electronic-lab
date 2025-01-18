@@ -72,20 +72,9 @@
 //
 // ---------------------------------------------------------------------------------------------
 //
-// When reading from the SPI device the data is available for at least one period starting
-// on @posedge(i_Clk) when o_Data_Valid is high. The data is valid for one period only.
-// It's recommented to read the data on @negedge(i_Clk) if o_Data_Valid is set to high.
-// Note that the i_Data_Ready signal will be still set to high as shown below:
-//
-//                     ___     ___     ___ 
-//   i_Clk:        ___|   |___|   |___|   |___
-//                        :
-//                 _______:___________
-//   o_Busy:              :           |_______________
-//                     ___:___
-//   o_Data_Valid: ___|   :   |___________________
-//                        :
-//   o_Data:           XXXXXXX
+// Regarding reading from the SPI device, a result the latest scan is being retained by the module.
+// A state of the data can be sampled data on any edge of the clock. The defauls state of the data
+// is '0'.
 //
 // ---------------------------------------------------------------------------------------------
 
@@ -110,8 +99,7 @@ module spi
                                             // [7:0]  8-bit command
 
         // Output data read from the SPI device
-        output reg                  o_Data_Valid,   // The data is ready to be read
-        output reg [READ_WIDTH-1:0] o_Data,         // Data read from the SPI after the corresponding command is sent
+        output reg [READ_WIDTH-1:0] o_Data, // Data read from the SPI after the corresponding command is sent
 
         // Output SPI signals
         output reg          o_SPI_Stb,
@@ -293,22 +281,11 @@ module spi
             // changes during the simulation.
             o_Data <= 'z;
 `endif
-            o_Data_Valid <= 1'b0;
             r_RX_Addr <= '0;
         end
         else begin
-            // Make sure the data ready flag is reset after 1 clock cycle
-            o_Data_Valid <= 1'b0;
-
             case (r_State)
                 LOAD_DATA: begin
-`ifndef SIMULATION
-                    o_Data <= '0;
-`else
-                    // Setting the output data to 'z in the simulation mode helps vizualizing the data
-                    // changes during the simulation.
-                    o_Data <= 'z;
-`endif
                     r_RX_Addr <= '0;
                 end
                 DATA_SET_RX_ADDR: begin
@@ -319,18 +296,18 @@ module spi
 `else
                         // Simulate reading the current state of the data signal from SPI device.
                         // The resulting signal will be a sequnce of 0s and 1s.
-                        o_Data[r_RX_Addr] <= r_RX_Addr[0];
+                        if (o_Data[r_RX_Addr] == 1'bz) begin
+                            o_Data[r_RX_Addr] <= r_RX_Addr[0];
+                        end
+                        else begin
+                            o_Data[r_RX_Addr] <= r_RX_Addr[1];
+                        end
 `endif
                     end
                 end
                 DATA_RX: begin
                     if (r_RX_Delay_Cycles == CYCLES) begin
                         r_RX_Addr <= r_RX_Addr + 1'b1;
-                        // The data is ready for a duration of 1 clock cycle after the last bit
-                        // was read.
-                        if (r_RX_Addr == READ_WIDTH - 1) begin
-                            o_Data_Valid <= 1'b1;
-                        end
                     end
                  end
             endcase

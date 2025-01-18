@@ -6,6 +6,7 @@ module tm1638
 
     import tm1638_driver_types::*;
     import tm1638_types::*;
+    import led7_types::*;
 
     #(
 `ifdef SIMULATION
@@ -13,15 +14,17 @@ module tm1638
         parameter   SPI_CYCLES = 1,
         parameter   SPI_READ_DELAY_CYCLES = 1,  // The number of cycles to wait before reading the data from the SPI device
         parameter   SPI_READ_WIDTH = 8,         // The width of the data read from the SPI device (must be a power of 2)
-        parameter   FIFO_DEPTH = 4
+        parameter   FIFO_DEPTH = 4,
+        parameter   KEY_RESET_CYCLES = 0
 `else
         // GOWIN Tang Nano 20K FPGA. 27 MHz clock.
-        parameter   STIMUL_CLK_CYCLES_DELAY = 5_400_000,    // 27 MHz ->   5 Hz update frequency
+        parameter   STIMUL_CLK_CYCLES_DELAY = 540_000,      // 27 MHz ->   50 Hz update frequency
         parameter   SPI_CYCLES = 200,                       // 27 MHz -> ~67 kHz SPI clock
         parameter   SPI_READ_DELAY_CYCLES = 200,            // The number of cycles to wait before reading the data from the SPI device (about 7.4 us for 27 MHz, or 2 us for 100 MHz)
         parameter   SPI_READ_WIDTH = 32,                    // The width of the data read from the SPI device (must be a power of 2)
         parameter   FIFO_DEPTH = 16,
-        parameter   DEBOUNCE_CYCLES = 27_000                // 27 MHz ->   1 kHz debounce frequency (1 ms)
+        parameter   DEBOUNCE_CYCLES = 27_000,               // 27 MHz -> 1 kHz debounce frequency (1 ms)
+        parameter   KEY_RESET_CYCLES = 27_000_000           // 27 MHz -> 1 Hz reset frequency (1 s)
 `endif
     )(
         // Control signals
@@ -55,9 +58,6 @@ module tm1638
     );
 
 `ifndef SIMULATION
-    //assign o_Clk = i_Clk;
-    //assign o_Clk = r_Out_Data_Valid;
-    //assign o_Clk = r_Data[17];
     assign o_Clk = r_Out_Data[0];
 `endif
 
@@ -78,7 +78,6 @@ module tm1638
         ) tm1638_stimulus_0 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
-
             .o_Segments (r_Segments_0),
             .o_Leds     (r_Leds_0),
             .o_Valid    (r_Segments_Valid_0)
@@ -94,7 +93,6 @@ module tm1638
         ) tm1638_stimulus_1 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
-
             .o_Segments (r_Segments_1),
             .o_Leds     (r_Leds_1),
             .o_Valid    (r_Segments_Valid_1)
@@ -110,7 +108,6 @@ module tm1638
         ) tm1638_stimulus_2 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
-
             .o_Segments (r_Segments_2),
             .o_Leds     (r_Leds_2),
             .o_Valid    (r_Segments_Valid_2)
@@ -126,7 +123,6 @@ module tm1638
         ) tm1638_stimulus_3 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
-
             .o_Segments (r_Segments_3),
             .o_Leds     (r_Leds_3),
             .o_Valid    (r_Segments_Valid_3)
@@ -142,7 +138,6 @@ module tm1638
         ) tm1638_stimulus_4 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
-
             .o_Segments (r_Segments_4),
             .o_Leds     (r_Leds_4),
             .o_Valid    (r_Segments_Valid_4)
@@ -158,46 +153,79 @@ module tm1638
         ) tm1638_stimulus_5 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
-
             .o_Segments (r_Segments_5),
             .o_Leds     (r_Leds_5),
             .o_Valid    (r_Segments_Valid_5)
         );
+
+    reg  [SPI_READ_WIDTH-1:0]   r_Out_Data;     // The input signal for keys pressed on the TM1638.
+    wire [SPI_READ_WIDTH-1:0]   w_Out_Data;     // The pulses for keys pressed on the TM1638.
+`ifdef SIMULATION
+    // In simulation, the stimulus is controlled by the testbench. And the debouncing nodule is not used.
+    // It's tested separately in the testbench.
+    assign w_Out_Data = r_Out_Data;
+`else
+    reg  [SPI_READ_WIDTH-1:0]   r_Out_Data_debounced;
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_0 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY0]), .o_Data (r_Out_Data_debounced[KEY0]));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_1 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY1]), .o_Data (r_Out_Data_debounced[KEY1]));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_2 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY2]), .o_Data (r_Out_Data_debounced[KEY2]));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_3 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY3]), .o_Data (r_Out_Data_debounced[KEY3]));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_4 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY4]), .o_Data (r_Out_Data_debounced[KEY4]));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_5 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY5]), .o_Data (r_Out_Data_debounced[KEY5]));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_6 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY6]), .o_Data (r_Out_Data_debounced[KEY6]));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_7 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (r_Out_Data[KEY7]), .o_Data (r_Out_Data_debounced[KEY7]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_0 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY0]), .o_Data(w_Out_Data[KEY0]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_1 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY1]), .o_Data(w_Out_Data[KEY1]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_2 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY2]), .o_Data(w_Out_Data[KEY2]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_3 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY3]), .o_Data(w_Out_Data[KEY3]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_4 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY4]), .o_Data(w_Out_Data[KEY4]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_5 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY5]), .o_Data(w_Out_Data[KEY5]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_6 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY6]), .o_Data(w_Out_Data[KEY6]));
+    pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_7 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY7]), .o_Data(w_Out_Data[KEY7]));
+
+    // for (genvar i = 0; i < SPI_READ_WIDTH; i = i + 1) begin : DEBOUNCE
+    //     debounce
+    //         #(  .DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)
+    //     ) debounce_1 (
+    //         .i_Rst  (i_Rst),
+    //         .i_Clk  (i_Clk),
+    //         .i_Data (r_Out_Data[i]),
+    //         .o_Data (r_Out_Data_debounced[i])
+    //     );
+    //     pulse pulse_1 (
+    //         .i_Rst  (i_Rst),
+    //         .i_Clk  (i_Clk),
+    //         .i_Data (r_Out_Data_debounced[i]),
+    //         .o_Data (w_Out_Data[i])
+    //     );
+    // end
+`endif
+
     segments_t  r_Segments_6;
     leds_t      r_Leds_6;
     reg         r_Segments_Valid_6;
-    tm1638_stimulus_fixed
+    tm1638_stimulus_keys2cntr
         #(  .STIMUL_CLK_CYCLES_DELAY    (STIMUL_CLK_CYCLES_DELAY),
-            .SEG                        (S5),
-            .LEDS                       (8'b00000100)
+            .SPI_READ_WIDTH             (SPI_READ_WIDTH)
         ) tm1638_stimulus_6 (
-            .i_Rst      (i_Rst),
-            .i_Clk      (i_Clk),
-
-            .o_Segments (r_Segments_6),
-            .o_Leds     (r_Leds_6),
-            .o_Valid    (r_Segments_Valid_6)
+            .i_Rst          (i_Rst),
+            .i_Clk          (i_Clk),
+            .i_Data_Pulse   (w_Out_Data),   // 1 clock cycle long pulses on keys pressed
+            .o_Segments     (r_Segments_6),
+            .o_Leds         (r_Leds_6),
+            .o_Valid        (r_Segments_Valid_6)
         );
-
-    // These signals represents keys pressed on the TM1638.
-    // NOTE: They still need to be debounced and processed.
-    reg                         r_Out_Data_Valid;
-    reg [SPI_READ_WIDTH-1:0]    r_Out_Data;
 
     segments_t  r_Segments_7;
     leds_t      r_Leds_7;
     reg         r_Segments_Valid_7;
     tm1638_stimulus_keys
         #(  .STIMUL_CLK_CYCLES_DELAY    (STIMUL_CLK_CYCLES_DELAY),
-            .SPI_READ_WIDTH             (SPI_READ_WIDTH),
-            .LEDS                       (8'b00000010)
+            .SPI_READ_WIDTH             (SPI_READ_WIDTH)
         ) tm1638_stimulus_7 (
             .i_Rst      (i_Rst),
             .i_Clk      (i_Clk),
-
-            .i_Data_Valid   (r_Out_Data_Valid),
-            .i_Data         (r_Out_Data),
-
+            .i_Data     (r_Out_Data),   // continuous data on keys pressed
             .o_Segments (r_Segments_7),
             .o_Leds     (r_Leds_7),
             .o_Valid    (r_Segments_Valid_7)
@@ -212,13 +240,13 @@ module tm1638
     reg r_Stimulus_Next;
     debounce
         #(  .DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)
-    ) debounce_0 (
+        ) debounce_stimulus (
         .i_Rst  (i_Rst),
         .i_Clk  (i_Clk),
         .i_Data (i_Stimulus_Next),
         .o_Data (r_Stimulus_Next)
     );
-    pulse pulse_0 (
+    pulse pulse_stimulus (
         .i_Rst  (i_Rst),
         .i_Clk  (i_Clk),
         .i_Data (r_Stimulus_Next),
@@ -226,10 +254,10 @@ module tm1638
     );
 `endif
 
-    reg [2:0] r_Stimulus_Sel = 3'h0;
+    reg [2:0] r_Stimulus_Sel = 3'h6;
     always @(posedge i_Clk) begin
         if (i_Rst) begin
-            r_Stimulus_Sel <= 3'h0;
+            r_Stimulus_Sel <= 3'h6;
         end
         else if (w_Stimulus_Next) begin
             r_Stimulus_Sel <= r_Stimulus_Sel + 1'b1;
@@ -331,7 +359,6 @@ module tm1638
             .i_Data_Valid   (r_Data_Valid),
             .i_Data         (r_Data),
 
-            .o_Data_Valid   (r_Out_Data_Valid),
             .o_Data         (r_Out_Data),
 
             .o_SPI_Stb      (o_SPI_Stb),

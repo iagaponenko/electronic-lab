@@ -8,7 +8,7 @@ module tm1638_tb;
     localparam  STIMUL_CLK_CYCLES_DELAY = 10;
     localparam  SPI_CYCLES              = 1;
     localparam  SPI_READ_DELAY_CYCLES   = 1;
-    localparam  SPI_READ_WIDTH          = 8;
+    localparam  SPI_READ_WIDTH          = 32;
     localparam  FIFO_DEPTH              = 2;
 
     reg         r_Rst;

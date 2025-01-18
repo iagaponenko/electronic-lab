@@ -103,4 +103,40 @@ function logic [17:0] _make_command
     return {data_dir, command_data_type, data, command_type, command_arguments};
 endfunction 
 
+// The definitions for positions of leds, digits and keys on the TM1638 arranged from the left
+// to the right.
+typedef enum logic [2:0] {
+    LED0 = 3'd7,
+    LED1 = 3'd6,
+    LED2 = 3'd5,
+    LED3 = 3'd4,
+    LED4 = 3'd3,
+    LED5 = 3'd2,
+    LED6 = 3'd1,
+    LED7 = 3'd0
+} tm1638_led_pos_t;
+
+typedef enum logic [2:0] {
+    DIGIT0 = 3'd7,
+    DIGIT1 = 3'd6,
+    DIGIT2 = 3'd5,
+    DIGIT3 = 3'd4,
+    DIGIT4 = 3'd3,
+    DIGIT5 = 3'd2,
+    DIGIT6 = 3'd1,
+    DIGIT7 = 3'd0
+} tm1638_digit_pos_t;
+
+typedef enum logic [4:0] {
+    KEY0 = 5'd28,
+    KEY1 = 5'd20,
+    KEY2 = 5'd12,
+    KEY3 = 5'd04,
+    KEY4 = 5'd24,
+    KEY5 = 5'd16,
+    KEY6 = 5'd08,
+    KEY7 = 5'd00
+} tm1638_key_pos_t;
+
+
 endpackage
