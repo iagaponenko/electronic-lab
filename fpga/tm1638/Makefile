@@ -7,7 +7,8 @@ bin/spi_fifo run/spi_fifo.vcd \
 bin/spi run/spi.vcd \
 bin/fifo run/fifo.vcd \
 bin/debounce run/debounce.vcd \
-bin/pulse run/pulse.vcd
+bin/pulse run/pulse.vcd \
+bin/encoder run/encoder.vcd
 
 .PHONY: all
 all: $(targets)
@@ -71,6 +72,15 @@ run/pulse.vcd: bin/pulse
 	cd run; ../bin/pulse >& ../logs/pulse.log; cd -
 
 # ------------------------------------------------------------------------------
+bin/encoder: design/encoder.sv design/pulse.sv tb/encoder_tb.sv
+	mkdir -p bin
+	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+
+run/encoder.vcd: bin/encoder
+	mkdir -p run logs
+	cd run; ../bin/encoder >& ../logs/encoder.log; cd -
+
+# ------------------------------------------------------------------------------
 
 tm1638_driver_files := \
 	design/tm1638_types.sv \
@@ -80,7 +90,8 @@ tm1638_driver_files := \
 	design/tm1638_stimulus_fixed.sv \
 	design/tm1638_stimulus_keys.sv \
 	design/led7_types.sv \
-	design/tm1638_stimulus_keys2cntr.sv
+	design/tm1638_stimulus_keys2cntr.sv \
+	design/tm1638_stimulus_encoder.sv
 
 bin/tm1638_driver: $(tm1638_driver_files) tb/tm1638_driver_tb.sv
 	mkdir -p bin
@@ -92,7 +103,7 @@ run/tm1638_driver.vcd: bin/tm1638_driver
 
 # ------------------------------------------------------------------------------
 
-bin/tm1638: $(tm1638_driver_files) $(spi_fifo_files) design/debounce.sv design/pulse.sv design/tm1638.sv tb/tm1638_tb.sv
+bin/tm1638: $(tm1638_driver_files) $(spi_fifo_files) design/debounce.sv design/pulse.sv design/encoder.sv design/tm1638.sv tb/tm1638_tb.sv
 	mkdir -p bin
 	iverilog -DSIMULATION -Wall -g2012 -o $@ $^
 

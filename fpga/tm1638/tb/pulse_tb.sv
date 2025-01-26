@@ -7,27 +7,50 @@ module pulse_tb;
     reg r_Rst;
     reg r_Clk;
     reg r_Data;
-    reg r_Pulse;
-    reg r_Pulse_Series;
+    reg r_Pulse_Rise;
+    reg r_Pulse_Rise_Series;
+    reg r_Pulse_Fall;
+    reg r_Pulse_Fall_Series;
 
-    // Make pulses on the falling edge of the clock.
+    // Make pulses on the rising edge of the input signal.
     pulse
-    pulse_0 (
+    pulse_rise (
         .i_Rst  (r_Rst),
         .i_Clk  (r_Clk),
         .i_Data (r_Data),
-        .o_Data (r_Pulse)
+        .o_Data (r_Pulse_Rise)
     );
 
 
-    // Make a series of pulses
+    // Make a series of pulses on the rising edge of the input signal.
     pulse #(
-        .RESET_CYCLES   (RESET_CYCLES))
-    pulse_1 (
+        .RESET_CYCLES(RESET_CYCLES))
+    pulse_rise_series (
         .i_Rst  (r_Rst),
         .i_Clk  (r_Clk),
         .i_Data (r_Data),
-        .o_Data (r_Pulse_Series)
+        .o_Data (r_Pulse_Rise_Series)
+    );
+
+    // Make pulses on the falling edge of the input signal.
+    pulse #(
+        .ON_FALL(1))
+    pulse_fall (
+        .i_Rst  (r_Rst),
+        .i_Clk  (r_Clk),
+        .i_Data (r_Data),
+        .o_Data (r_Pulse_Fall)
+    );
+
+    // Make a series of pulses on the falling edge of the input signal.
+    pulse #(
+        .RESET_CYCLES(RESET_CYCLES),
+        .ON_FALL(1))
+    pulse_fall_series (
+        .i_Rst  (r_Rst),
+        .i_Clk  (r_Clk),
+        .i_Data (r_Data),
+        .o_Data (r_Pulse_Fall_Series)
     );
 
     function void init();

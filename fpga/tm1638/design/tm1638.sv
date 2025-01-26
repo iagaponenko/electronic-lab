@@ -31,6 +31,9 @@ module tm1638
         input               i_Rst,
         input               i_Clk,
         input               i_Stimulus_Next,
+        input               i_Encoder_Btn,      // Button signal from the rotary encoder
+        input               i_Encoder_A,        // A signal from the rotary encoder
+        input               i_Encoder_B,        // B signal from the rotary encoder
 `ifndef SIMULATION
         output              o_Clk,        // Clock signal to the FPGa pin for debugging
 `endif
@@ -143,21 +146,6 @@ module tm1638
             .o_Valid    (r_Segments_Valid_4)
         );
 
-    segments_t  r_Segments_5;
-    leds_t      r_Leds_5;
-    reg         r_Segments_Valid_5;
-    tm1638_stimulus_fixed
-        #(  .STIMUL_CLK_CYCLES_DELAY    (STIMUL_CLK_CYCLES_DELAY),
-            .SEG                        (S4),
-            .LEDS                       (8'b00001000)
-        ) tm1638_stimulus_5 (
-            .i_Rst      (i_Rst),
-            .i_Clk      (i_Clk),
-            .o_Segments (r_Segments_5),
-            .o_Leds     (r_Leds_5),
-            .o_Valid    (r_Segments_Valid_5)
-        );
-
     reg  [SPI_READ_WIDTH-1:0]   r_Out_Data;     // The input signal for keys pressed on the TM1638.
     wire [SPI_READ_WIDTH-1:0]   w_Out_Data;     // The pulses for keys pressed on the TM1638.
 `ifdef SIMULATION
@@ -182,24 +170,58 @@ module tm1638
     pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_5 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY5]), .o_Data(w_Out_Data[KEY5]));
     pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_6 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY6]), .o_Data(w_Out_Data[KEY6]));
     pulse #(.RESET_CYCLES(KEY_RESET_CYCLES)) pulse_7 (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Out_Data_debounced[KEY7]), .o_Data(w_Out_Data[KEY7]));
-
-    // for (genvar i = 0; i < SPI_READ_WIDTH; i = i + 1) begin : DEBOUNCE
-    //     debounce
-    //         #(  .DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)
-    //     ) debounce_1 (
-    //         .i_Rst  (i_Rst),
-    //         .i_Clk  (i_Clk),
-    //         .i_Data (r_Out_Data[i]),
-    //         .o_Data (r_Out_Data_debounced[i])
-    //     );
-    //     pulse pulse_1 (
-    //         .i_Rst  (i_Rst),
-    //         .i_Clk  (i_Clk),
-    //         .i_Data (r_Out_Data_debounced[i]),
-    //         .o_Data (w_Out_Data[i])
-    //     );
-    // end
 `endif
+
+    wire    w_Encoder_Btn;     // The pulses for a button pressed on the encoder.
+`ifdef SIMULATION
+    // In simulation, the stimulus is controlled by the testbench. And the debouncing nodule is not used.
+    // It's tested separately in the testbench.
+    assign  w_Encoder_Btn = ~i_Encoder_Btn;
+`else
+    reg     r_Encoder_Btn_debounced;
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES))  debounce_encoder_btn (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(~i_Encoder_Btn),          .o_Data(r_Encoder_Btn_debounced));
+    pulse    #(.RESET_CYCLES    (KEY_RESET_CYCLES)) pulse_encoder_btn    (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data(r_Encoder_Btn_debounced), .o_Data(w_Encoder_Btn));
+`endif
+
+    wire    w_Encoder_A;
+    wire    w_Encoder_B;
+`ifdef SIMULATION
+    // In simulation, the stimulus is controlled by the testbench. And the debouncing nodule is not used.
+    // It's tested separately in the testbench.
+    assign w_Encoder_A = i_Encoder_A;
+    assign w_Encoder_B = i_Encoder_B;
+`else
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_encoder_a (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (i_Encoder_A), .o_Data (w_Encoder_A));
+    debounce #(.DEBOUNCE_CYCLES (DEBOUNCE_CYCLES)) debounce_encoder_b (.i_Rst(i_Rst), .i_Clk(i_Clk), .i_Data (i_Encoder_B), .o_Data (w_Encoder_B));
+`endif
+
+    reg r_Encoder_Left;
+    reg r_Encoder_Right;
+    encoder encoder_0 (
+        .i_Rst      (i_Rst),
+        .i_Clk      (i_Clk),
+        .i_A        (w_Encoder_A),
+        .i_B        (w_Encoder_B),
+        .o_Left     (r_Encoder_Left),
+        .o_Right    (r_Encoder_Right)
+    );
+
+    segments_t  r_Segments_5;
+    leds_t      r_Leds_5;
+    reg         r_Segments_Valid_5;
+    tm1638_stimulus_encoder
+        #(  .STIMUL_CLK_CYCLES_DELAY    (STIMUL_CLK_CYCLES_DELAY)
+        ) tm1638_stimulus_5 (
+            .i_Rst          (i_Rst),
+            .i_Clk          (i_Clk),
+            .i_Data_Pulse   (w_Out_Data),       // 1 clock cycle long pulses on keys pressed
+            .i_Encoder_Btn  (w_Encoder_Btn),    // 1 clock cycle long pulses on keys pressed
+            .i_Encoder_Left (r_Encoder_Left),
+            .i_Encoder_Right(r_Encoder_Right),
+            .o_Segments     (r_Segments_5),
+            .o_Leds         (r_Leds_5),
+            .o_Valid        (r_Segments_Valid_5)
+        );
 
     segments_t  r_Segments_6;
     leds_t      r_Leds_6;
@@ -254,10 +276,10 @@ module tm1638
     );
 `endif
 
-    reg [2:0] r_Stimulus_Sel = 3'h6;
+    reg [2:0] r_Stimulus_Sel = 3'h5;
     always @(posedge i_Clk) begin
         if (i_Rst) begin
-            r_Stimulus_Sel <= 3'h6;
+            r_Stimulus_Sel <= 3'h5;
         end
         else if (w_Stimulus_Next) begin
             r_Stimulus_Sel <= r_Stimulus_Sel + 1'b1;

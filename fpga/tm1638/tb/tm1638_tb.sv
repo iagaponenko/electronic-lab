@@ -14,7 +14,9 @@ module tm1638_tb;
     reg         r_Rst;
     reg         r_Clk;
     reg         r_Stimulus_Next;
-
+    reg         r_Encoder_Btn;
+    reg         r_Encoder_A;
+    reg         r_Encoder_B;
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
     reg         r_SPI_Dio;
@@ -41,6 +43,9 @@ module tm1638_tb;
             .i_Rst                  (r_Rst),
             .i_Clk                  (r_Clk),
             .i_Stimulus_Next        (r_Stimulus_Next),
+            .i_Encoder_Btn          (r_Encoder_Btn),
+            .i_Encoder_A            (r_Encoder_A),
+            .i_Encoder_B            (r_Encoder_B),
 
             .o_SPI_Stb              (r_SPI_Stb),
             .o_SPI_Clk              (r_SPI_Clk),
@@ -64,6 +69,9 @@ module tm1638_tb;
         r_Rst = 1'b1;
         r_Clk = 1'b0;
         r_Stimulus_Next = 1'b0;
+        r_Encoder_Btn = 1'b1;
+        r_Encoder_A = 1'b0;
+        r_Encoder_B = 1'b0;
     endfunction
 
     initial begin
@@ -74,12 +82,20 @@ module tm1638_tb;
     end
 
     always @(posedge r_Clk) begin
-        #($urandom_range(200, 400) * 1ns) begin
+        #($urandom_range(40, 80) * 1ns) begin
             @(posedge r_Clk) r_Stimulus_Next = 1'b1;
             @(posedge r_Clk) r_Stimulus_Next = 1'b0;
         end
     end
-
-    always #5 r_Clk = ~r_Clk;
+    always begin
+        forever #($urandom_range(10, 40) * 1ns) begin
+            @ (negedge r_Clk);
+            r_Encoder_B = $urandom_range(0, 1);
+            @ (negedge r_Clk);
+            @ (negedge r_Clk);
+            r_Encoder_A = $urandom_range(0, 1);
+        end
+    end
+    always #1 r_Clk = ~r_Clk;
 
 endmodule
