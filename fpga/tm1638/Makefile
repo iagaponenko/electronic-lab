@@ -8,7 +8,10 @@ bin/spi run/spi.vcd \
 bin/fifo run/fifo.vcd \
 bin/debounce run/debounce.vcd \
 bin/pulse run/pulse.vcd \
-bin/encoder run/encoder.vcd
+bin/encoder run/encoder.vcd \
+bin/max7219 run/max7219.vcd \
+bin/spi_max7219 run/spi_max7219.vcd \
+bin/max7219_driver run/max7219_driver.vcd
 
 .PHONY: all
 all: $(targets)
@@ -103,7 +106,37 @@ run/tm1638_driver.vcd: bin/tm1638_driver
 
 # ------------------------------------------------------------------------------
 
-bin/tm1638: $(tm1638_driver_files) $(spi_fifo_files) design/debounce.sv design/pulse.sv design/encoder.sv design/tm1638.sv tb/tm1638_tb.sv
+bin/max7219: design/max7219_write.sv tb/max7219_tb.sv
+	mkdir -p bin
+	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+
+run/max7219.vcd: bin/max7219
+	mkdir -p run logs
+	cd run; ../bin/max7219 >& ../logs/max7219.log; cd -
+
+# ------------------------------------------------------------------------------
+
+bin/spi_max7219: design/spi_max7219.sv tb/spi_max7219_tb.sv
+	mkdir -p bin
+	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+
+run/spi_max7219.vcd: bin/spi_max7219
+	mkdir -p run logs
+	cd run; ../bin/spi_max7219 >& ../logs/spi_max7219.log; cd -
+
+# ------------------------------------------------------------------------------
+
+bin/max7219_driver: design/spi_max7219.sv design/max7219_driver.sv tb/max7219_driver_tb.sv
+	mkdir -p bin
+	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+
+run/max7219_driver.vcd: bin/max7219_driver
+	mkdir -p run logs
+	cd run; ../bin/max7219_driver >& ../logs/max7219_driver.log; cd -
+
+# ------------------------------------------------------------------------------
+
+bin/tm1638: $(tm1638_driver_files) $(spi_fifo_files) design/spi_max7219.sv design/debounce.sv design/pulse.sv design/encoder.sv design/tm1638.sv tb/tm1638_tb.sv
 	mkdir -p bin
 	iverilog -DSIMULATION -Wall -g2012 -o $@ $^
 

@@ -38,13 +38,18 @@ module tm1638
         output              o_Clk,        // Clock signal to the FPGa pin for debugging
 `endif
 
-        // Output SPI signals
+        // Output SPI signals (TM1638)
         output reg          o_SPI_Stb,
         output reg          o_SPI_Clk,
-`ifndef SIMULATION
-        inout  reg          io_SPI_Dio
-`else
         inout  reg          io_SPI_Dio,
+
+        // Output SPI signals (MAX7219)
+        output reg          o_SPI_MAX7219_Stb,
+        output reg          o_SPI_MAX7219_Clk,
+`ifndef SIMULATION
+        output reg          o_SPI_MAX7219_Din
+`else
+        output reg          o_SPI_MAX7219_Din,
 
         // Diagnostic signals (this module)
         output reg          o_Diag_Segments_Valid,
@@ -372,7 +377,7 @@ module tm1638
         #(  .SPI_CYCLES             (SPI_CYCLES),
             .SPI_READ_DELAY_CYCLES  (SPI_READ_DELAY_CYCLES),
             .SPI_READ_WIDTH         (SPI_READ_WIDTH),
-            .FIFO_DEPTH (FIFO_DEPTH)
+            .FIFO_DEPTH             (FIFO_DEPTH)
         ) spi_fifo_0 (
             .i_Rst          (i_Rst),
             .i_Clk          (i_Clk),
@@ -394,5 +399,208 @@ module tm1638
     assign o_Diag_Data           = r_Data;
     assign o_Diag_Data_Valid     = r_Data_Valid;
 `endif
+
+    // The simple test for the MAX7219 driver.
+    //
+    // Coordinate system of a single 8x8 dot display:
+    // 
+    //       ROWS
+    //
+    //       7 |
+    //       6 |
+    //       5 |
+    //       4 |
+    //       3 |
+    //       2 |
+    //       1 |
+    //       0 |              x
+    //         +---------------
+    //          0 1 2 3 4 5 6 7  COLUMNS
+    //
+    // The column numbers map to the bit numbers in the DATA as follows:
+    // - the MSB 0 is the leftmost  pixel of the row (COLUMN=0)
+    // - the MSB 7 is the rightmost pixel of the row (COLUMN=7)
+    //
+    // For example, a coordinate of the symbol 'x' is represented by ROW=0, DATA=8b'10000000
+    //
+`ifdef SIMULATION
+    localparam  MAX7219_SPI_CYCLES = 1;
+    localparam  MAX7219_DATA_WIDTH = 16;
+`else
+    // GOWIN Tang Nano 20K FPGA. 27 MHz clock.
+    localparam  MAX7219_SPI_CYCLES = 200;
+    localparam  MAX7219_DATA_WIDTH = 20 * 16;
+
+    localparam  HDR = 4'b0000;
+
+    localparam  REG_NOP     = 4'b0000;
+    localparam  DATA_NOP    = 8'b00000000;
+
+    localparam  REG_ROW_0   = 4'b0001;
+    localparam  REG_ROW_1   = 4'b0010;
+    localparam  REG_ROW_2   = 4'b0011;
+    localparam  REG_ROW_3   = 4'b0100;
+    localparam  REG_ROW_4   = 4'b0101;
+    localparam  REG_ROW_5   = 4'b0110;
+    localparam  REG_ROW_6   = 4'b0111;
+    localparam  REG_ROW_7   = 4'b1000;
+    wire [3:0]  REG_ROW [8] = {
+        REG_ROW_0, REG_ROW_1, REG_ROW_2, REG_ROW_3, REG_ROW_4, REG_ROW_5, REG_ROW_6, REG_ROW_7
+    };
+        
+    localparam  DATA_ROW_0    = 8'b11000000;
+    localparam  DATA_ROW_1    = 8'b01000000;
+    localparam  DATA_ROW_2    = 8'b00100000;
+    localparam  DATA_ROW_3    = 8'b00010000;
+    localparam  DATA_ROW_4    = 8'b00001000;
+    localparam  DATA_ROW_5    = 8'b00000100;
+    localparam  DATA_ROW_6    = 8'b00000010;
+    localparam  DATA_ROW_7    = 8'b00000001;
+    wire [7:0]  DATA_ROW [8] = {
+        8'b11000000,
+        8'b01000000,
+        8'b00100000,
+        8'b00010000,
+        8'b00001000,
+        8'b00000100,
+        8'b00000010,
+        8'b00000001
+    };
+    localparam SYMB_0 = 64'hf88888888888f800;
+    localparam SYMB_1 = 64'h8080808080808000;
+    localparam SYMB_2 = 64'hf80808f88080f800;
+    localparam SYMB_3 = 64'hf88080f88080f800;
+    localparam SYMB_4 = 64'h808080f888888800;
+    localparam SYMB_5 = 64'hf88080f80808f800;
+    localparam SYMB_6 = 64'hf88888f80808f800;
+    localparam SYMB_7 = 64'h808080808080f800;
+    localparam SYMB_8 = 64'hf88888f88888f800;
+    localparam SYMB_9 = 64'hf88080f88888f800;
+
+    wire [7:0][7:0]  DATA_SYMBOLS [10] = {
+        SYMB_0, SYMB_1, SYMB_2, SYMB_3, SYMB_4, SYMB_5, SYMB_6, SYMB_7, SYMB_8, SYMB_9
+    };
+
+    localparam  REG_SHUT            = 4'b1100;
+    localparam  DATA_SHUT_DOWN      = 8'b00000000;
+    localparam  DATA_SHUT_NORMAL    = 8'b00000001;
+
+    localparam  REG_SCAN            = 4'b1011;
+    localparam  DATA_SCAN_0xxxxxxx  = 8'b00000000;
+    localparam  DATA_SCAN_01xxxxxx  = 8'b00000001;
+    localparam  DATA_SCAN_012xxxxx  = 8'b00000010;
+    localparam  DATA_SCAN_0123xxxx  = 8'b00000011;
+    localparam  DATA_SCAN_01234xxx  = 8'b00000100;
+    localparam  DATA_SCAN_012345xx  = 8'b00000101;
+    localparam  DATA_SCAN_0123456x  = 8'b00000110;
+    localparam  DATA_SCAN_01234567  = 8'b00000111;
+
+    localparam  REG_BCD_ENCODE          = 4'b1001;
+    localparam  DATA_BCD_ENCODE_NONE    = 8'b00000000;
+
+    localparam  REG_INTENSITY   = 4'b1010;
+    wire [7:0]  DATA_INTENSITY [16] = {
+        8'b00000000, 8'b00000001, 8'b00000010, 8'b00000011, 8'b00000100, 8'b00000101, 8'b00000110, 8'b00000111,
+        8'b00001000, 8'b00001001, 8'b00001010, 8'b00001011, 8'b00001100, 8'b00001101, 8'b00001110, 8'b00001111
+    };
+
+`endif
+
+    // Set the data signal r_MAX7219_Data_Valid on the negative edge of the system clock
+    // for one clock cycle only.
+    reg                             r_MAX7219_SPI_Busy;
+    reg                             r_MAX7219_Data_Valid = 1'b0;
+    reg [MAX7219_DATA_WIDTH-1:0]    r_MAX7219_Data;
+
+    int step = 0;
+    int symbol = 0;
+    int row = 0;
+
+    always @(negedge i_Clk) begin
+        if (i_Rst) begin
+            r_MAX7219_Data_Valid <= 1'b0;
+            step <= 0;
+            row <= 0;
+            symbol <= 0;
+        end
+        else begin
+            if (r_MAX7219_Data_Valid) begin
+                r_MAX7219_Data_Valid <= 1'b0;
+            end
+            else begin
+                if (~r_MAX7219_SPI_Busy) begin
+                    r_MAX7219_Data_Valid <= 1'b1;
+`ifdef SIMULATION
+                    r_MAX7219_Data <= 16'b10000000_10000000;
+`else
+                    case (step)
+                        0: begin
+                            r_MAX7219_Data <= {20{HDR, REG_SHUT, DATA_SHUT_DOWN}};
+                            step <= step + 1;
+                        end
+                        1: begin
+                            r_MAX7219_Data <= {20{HDR, REG_SHUT, DATA_SHUT_NORMAL}};
+                            step <= step + 1;
+                        end
+                        2: begin
+                            r_MAX7219_Data <= {20{HDR, REG_BCD_ENCODE, DATA_BCD_ENCODE_NONE}};
+                            step <= step + 1;
+                        end
+                        3: begin
+                            r_MAX7219_Data <= {{16{HDR, REG_INTENSITY, DATA_INTENSITY[15]}}, {4{HDR, REG_INTENSITY, DATA_INTENSITY[7]}}};
+                            step <= step + 1;
+                        end
+                        4: begin
+                            r_MAX7219_Data <= {20{HDR, REG_SCAN, DATA_SCAN_01234567}};
+                            step <= step + 1;
+                        end
+                        5: begin
+                            r_MAX7219_Data <= {20{HDR, REG_ROW[row], DATA_SYMBOLS[symbol][7 - row]}};
+                            if (row == 7) begin
+                                row <= 0;
+                                if (symbol == 9) begin
+                                    symbol <= 0;
+                                end
+                                else begin
+                                    symbol <= symbol + 1;
+                                end
+                                step <= step + 1;   // delay before the next symbol
+                            end
+                            else begin
+                                row <= row + 1;
+                            end
+                        end
+                        default: begin
+                            // Process delay before the next symbol
+                            if (step == 1000) begin
+                                step <= 0;
+                            end
+                            else begin
+                                step <= step + 1;
+                            end
+                            r_MAX7219_Data <= {20{HDR, REG_NOP, DATA_NOP}};
+                        end
+                    endcase
+`endif
+                end
+            end
+        end
+    end
+
+    spi_max7219
+        #(  .CYCLES     (MAX7219_SPI_CYCLES),
+            .DATA_WIDTH (MAX7219_DATA_WIDTH)
+        ) spi_max7219_0 (
+            .i_Rst          (i_Rst),
+            .i_Clk          (i_Clk),
+
+            .o_Busy         (r_MAX7219_SPI_Busy),
+            .i_Data_Ready   (r_MAX7219_Data_Valid),
+            .i_Data         (r_MAX7219_Data),
+
+            .o_SPI_Stb      (o_SPI_MAX7219_Stb),
+            .o_SPI_Clk      (o_SPI_MAX7219_Clk),
+            .o_SPI_Din      (o_SPI_MAX7219_Din)
+        );
 
 endmodule
