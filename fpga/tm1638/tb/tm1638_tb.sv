@@ -20,6 +20,9 @@ module tm1638_tb;
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
     reg         r_SPI_Dio;
+    reg         r_SPI_MAX7219_Stb;
+    reg         r_SPI_MAX7219_Clk;
+    reg         r_SPI_MAX7219_Din;
 
     // Diagnostic signals (tm1638)
     reg         r_Diag_Segments_Valid;
@@ -50,6 +53,10 @@ module tm1638_tb;
             .o_SPI_Stb              (r_SPI_Stb),
             .o_SPI_Clk              (r_SPI_Clk),
             .io_SPI_Dio             (r_SPI_Dio),
+
+            .o_SPI_MAX7219_Stb      (r_SPI_MAX7219_Stb),
+            .o_SPI_MAX7219_Clk      (r_SPI_MAX7219_Clk),
+            .o_SPI_MAX7219_Din      (r_SPI_MAX7219_Din),
 
             .o_Diag_Segments_Valid  (r_Diag_Segments_Valid),
             .o_Diag_SPI_FIFO_Full   (r_Diag_SPI_FIFO_Full),
