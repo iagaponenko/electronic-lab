@@ -38,13 +38,18 @@ module tm1638
         output              o_Clk,        // Clock signal to the FPGa pin for debugging
 `endif
 
-        // Output SPI signals
+        // Output SPI signals (TM1638)
         output reg          o_SPI_Stb,
         output reg          o_SPI_Clk,
-`ifndef SIMULATION
-        inout  reg          io_SPI_Dio
-`else
         inout  reg          io_SPI_Dio,
+
+        // Output SPI signals (MAX7219)
+        output reg          o_SPI_MAX7219_Stb,
+        output reg          o_SPI_MAX7219_Clk,
+`ifndef SIMULATION
+        output reg          o_SPI_MAX7219_Din
+`else
+        output reg          o_SPI_MAX7219_Din,
 
         // Diagnostic signals (this module)
         output reg          o_Diag_Segments_Valid,

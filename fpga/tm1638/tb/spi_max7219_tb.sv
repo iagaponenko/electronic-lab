@@ -1,29 +1,24 @@
 `timescale 1 ns / 1 ps
 
-module spi_tb;
+module spi_max7219_tb;
 
     localparam  CYCLES = 1;
+    localparam  DATA_WIDTH = 16;
 
     reg         r_Rst;
     reg         r_Clk;
 
-    reg         r_Busy;
-    reg         r_Data_Ready;
-    reg [17:0]  r_Data;
-
-    reg         r_Out_Data_Valid;
-    reg [63:0]  r_Out_Data;
+    reg                     r_Busy;
+    reg                     r_Data_Ready;
+    reg [DATA_WIDTH-1:0]    r_Data;
 
     reg         r_SPI_Stb;
     reg         r_SPI_Clk;
-    reg         r_SPI_Dio;
+    reg         r_SPI_Din;
 
-    reg [2:0]   r_Diag_State;
-    reg [17:0]  r_Diag_Data;
-    reg [3:0]   r_Diag_Addr;
-
-    spi
-        #(  .CYCLES         (CYCLES)
+    spi_max7219
+        #(  .CYCLES         (CYCLES),
+            .DATA_WIDTH     (DATA_WIDTH)
         ) spi_0 (
             .i_Rst          (r_Rst),
             .i_Clk          (r_Clk),
@@ -32,16 +27,9 @@ module spi_tb;
             .i_Data_Ready   (r_Data_Ready),
             .i_Data         (r_Data),
 
-            .o_Data_Valid   (r_Out_Data_Valid),
-            .o_Data         (r_Out_Data),
-
             .o_SPI_Stb      (r_SPI_Stb),
             .o_SPI_Clk      (r_SPI_Clk),
-            .io_SPI_Dio     (r_SPI_Dio),
-
-            .o_Diag_State   (r_Diag_State),
-            .o_Diag_Data    (r_Diag_Data),
-            .o_Diag_Addr    (r_Diag_Addr)
+            .o_SPI_Din      (r_SPI_Din)
         );
 
     task wait_for_busy;
@@ -51,7 +39,7 @@ module spi_tb;
     endtask
 
     initial begin
-        $dumpfile("spi.vcd");
+        $dumpfile("spi_max7219.vcd");
         $dumpvars(0);
         
         r_Rst = 1;
@@ -62,14 +50,14 @@ module spi_tb;
 
         wait_for_busy;
 
-        r_Data       = 18'b00_00000001_00000001;
+        r_Data       = 16'b00000001_00000001;
         r_Data_Ready = 1;
         @(negedge r_Clk);
         r_Data_Ready = 0;
 
         wait_for_busy;
 
-        r_Data       = 18'b01_10000000_10000000;
+        r_Data       = 16'b10000000_10000000;
         r_Data_Ready = 1;
         @(negedge r_Clk);
         r_Data_Ready = 0;
