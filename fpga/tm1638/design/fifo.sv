@@ -86,7 +86,7 @@ module fifo
         // Output data path signals
         output reg                  o_Empty,        // Empty flag (no data in the FIFO)
         input                       i_Read,         // Read Pulse to indicate the data is read
-`ifndef SIMULATION
+`ifndef __ICARUS__
         output reg [DATA_WIDTH-1:0] o_Data          // Data read from the FIFO
 `else
         output reg [DATA_WIDTH-1:0] o_Data,         // Data read from the FIFO
@@ -185,7 +185,7 @@ module fifo
     assign o_Empty = (r_State == WRITE_ONLY);
     assign o_Full  = (r_State == READ_ONLY);
 
-`ifdef SIMULATION
+`ifdef __ICARUS__
     assign o_Diag_State      = r_State;
     assign o_Diag_Buf_W_Addr = r_Buf_W_Addr;
     assign o_Diag_Buf_R_Addr = r_Buf_R_Addr;

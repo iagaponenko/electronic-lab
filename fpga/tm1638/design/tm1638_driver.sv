@@ -29,7 +29,7 @@ module tm1638_driver
         // Output data to be sent to TM1638 over SPI
         input               i_SPI_FIFO_Full,    // SPI FIFO full flag (not ready to accept data)
         output reg [17:0]   o_Data,             // Command or data to be sent to TM1638
-`ifndef SIMULATION
+`ifndef __ICARUS__
         output reg          o_Write             // Write pulse to indicate the data is ready
 `else
         output reg          o_Write,            // Write pulse to indicate the data is ready
@@ -152,7 +152,7 @@ module tm1638_driver
                      (r_State == LED_DATA_COMMAND_SET) ||
                      (r_State == LED_ADDR_COMMAND_SET);
 
-`ifdef SIMULATION
+`ifdef __ICARUS__
     assign o_Diag_State    = r_State;
     assign o_Diag_Grid     = r_Grid;
     assign o_Diag_Segments = r_Segments;

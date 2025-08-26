@@ -50,7 +50,7 @@ module spi_fifo
         // Output SPI signals
         output reg          o_SPI_Stb,
         output reg          o_SPI_Clk,
-`ifndef SIMULATION
+`ifndef __ICARUS__
         inout  reg          io_SPI_Dio
 `else
         inout  reg          io_SPI_Dio,
@@ -73,7 +73,7 @@ module spi_fifo
     localparam  FIFO_DATA_WIDTH = 18;
     localparam  FIFO_ADDR_WIDTH = $clog2(FIFO_DEPTH);
 
-`ifdef SIMULATION
+`ifdef __ICARUS__
     reg [1:0]                   r_Diag_FIFO_State;
     reg [FIFO_ADDR_WIDTH-1:0]   r_Diag_FIFO_Buf_W_Addr;
     reg [FIFO_ADDR_WIDTH-1:0]   r_Diag_FIFO_Buf_R_Addr;
@@ -91,7 +91,7 @@ module spi_fifo
 
             .o_Empty            (r_FIFO_Empty),
             .i_Read             (r_FIFO_Read),
-`ifndef SIMULATION
+`ifndef __ICARUS__
             .o_Data             (r_FIFO_RData)
 `else
             .o_Data             (r_FIFO_RData),
@@ -101,7 +101,7 @@ module spi_fifo
 `endif
         );
 
-`ifdef SIMULATION
+`ifdef __ICARUS__
     reg [2:0]   r_Diag_SPI_State;
     reg [17:0]  r_Diag_SPI_Data;
     reg [3:0]   r_Diag_SPI_Addr;
@@ -122,7 +122,7 @@ module spi_fifo
 
             .o_SPI_Stb      (o_SPI_Stb),
             .o_SPI_Clk      (o_SPI_Clk),
-`ifndef SIMULATION
+`ifndef __ICARUS__
             .io_SPI_Dio     (io_SPI_Dio)
 `else
             .io_SPI_Dio     (io_SPI_Dio),
@@ -160,7 +160,7 @@ module spi_fifo
         end
     end
 
-`ifdef SIMULATION
+`ifdef __ICARUS__
     assign o_Diag_FIFO_Read    = r_FIFO_Read;
     assign o_Diag_FIFO_RData   = r_FIFO_RData;
     assign o_Diag_FIFO_Empty   = r_FIFO_Empty;

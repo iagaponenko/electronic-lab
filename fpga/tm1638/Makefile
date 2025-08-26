@@ -25,7 +25,7 @@ clean:
 
 bin/fifo: design/fifo.sv tb/fifo_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/fifo.vcd: bin/fifo
 	mkdir -p run logs
@@ -35,7 +35,7 @@ run/fifo.vcd: bin/fifo
 
 bin/spi: design/spi.sv tb/spi_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/spi.vcd: bin/spi
 	mkdir -p run logs
@@ -50,7 +50,7 @@ spi_fifo_files := \
 
 bin/spi_fifo: $(spi_fifo_files) tb/spi_fifo_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/spi_fifo.vcd: bin/spi_fifo
 	mkdir -p run logs
@@ -59,7 +59,7 @@ run/spi_fifo.vcd: bin/spi_fifo
 # ------------------------------------------------------------------------------
 bin/debounce: design/debounce.sv tb/debounce_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/debounce.vcd: bin/debounce
 	mkdir -p run logs
@@ -68,7 +68,7 @@ run/debounce.vcd: bin/debounce
 # ------------------------------------------------------------------------------
 bin/pulse: design/pulse.sv tb/pulse_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/pulse.vcd: bin/pulse
 	mkdir -p run logs
@@ -77,7 +77,7 @@ run/pulse.vcd: bin/pulse
 # ------------------------------------------------------------------------------
 bin/encoder: design/encoder.sv design/pulse.sv tb/encoder_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/encoder.vcd: bin/encoder
 	mkdir -p run logs
@@ -98,7 +98,7 @@ tm1638_driver_files := \
 
 bin/tm1638_driver: $(tm1638_driver_files) tb/tm1638_driver_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/tm1638_driver.vcd: bin/tm1638_driver
 	mkdir -p run logs
@@ -108,7 +108,7 @@ run/tm1638_driver.vcd: bin/tm1638_driver
 
 bin/max7219: design/max7219_write.sv tb/max7219_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/max7219.vcd: bin/max7219
 	mkdir -p run logs
@@ -118,7 +118,7 @@ run/max7219.vcd: bin/max7219
 
 bin/spi_max7219: design/spi_max7219.sv tb/spi_max7219_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/spi_max7219.vcd: bin/spi_max7219
 	mkdir -p run logs
@@ -128,7 +128,7 @@ run/spi_max7219.vcd: bin/spi_max7219
 
 bin/max7219_driver: design/spi_max7219.sv design/max7219_driver.sv tb/max7219_driver_tb.sv
 	mkdir -p bin
-	iverilog -DSIMULATION  -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/max7219_driver.vcd: bin/max7219_driver
 	mkdir -p run logs
@@ -136,9 +136,20 @@ run/max7219_driver.vcd: bin/max7219_driver
 
 # ------------------------------------------------------------------------------
 
-bin/tm1638: $(tm1638_driver_files) $(spi_fifo_files) design/spi_max7219.sv design/debounce.sv design/pulse.sv design/encoder.sv design/tm1638.sv tb/tm1638_tb.sv
+tm1638_files := \
+	$(tm1638_driver_files) \
+	$(spi_fifo_files) \
+	design/max7219_driver.sv \
+	design/spi_max7219.sv \
+	design/debounce.sv \
+	design/pulse.sv \
+	design/encoder.sv \
+	design/tm1638.sv \
+	tb/tm1638_tb.sv
+
+bin/tm1638: $(tm1638_files)
 	mkdir -p bin
-	iverilog -DSIMULATION -Wall -g2012 -o $@ $^
+	iverilog -Wall -g2012 -o $@ $^
 
 run/tm1638.vcd: bin/tm1638
 	mkdir -p run logs

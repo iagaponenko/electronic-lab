@@ -9,7 +9,7 @@ module tm1638
     import led7_types::*;
 
     #(
-`ifdef SIMULATION
+`ifdef __ICARUS__
         parameter   STIMUL_CLK_CYCLES_DELAY = 0,
         parameter   SPI_CYCLES = 1,
         parameter   SPI_READ_DELAY_CYCLES = 1,  // The number of cycles to wait before reading the data from the SPI device
@@ -34,7 +34,7 @@ module tm1638
         input               i_Encoder_Btn,      // Button signal from the rotary encoder
         input               i_Encoder_A,        // A signal from the rotary encoder
         input               i_Encoder_B,        // B signal from the rotary encoder
-`ifndef SIMULATION
+`ifndef __ICARUS__
         output              o_Clk,        // Clock signal to the FPGa pin for debugging
 `endif
 
@@ -46,7 +46,7 @@ module tm1638
         // Output SPI signals (MAX7219)
         output reg          o_SPI_MAX7219_Stb,
         output reg          o_SPI_MAX7219_Clk,
-`ifndef SIMULATION
+`ifndef __ICARUS__
         output reg          o_SPI_MAX7219_Din
 `else
         output reg          o_SPI_MAX7219_Din,
@@ -65,7 +65,7 @@ module tm1638
 `endif
     );
 
-`ifndef SIMULATION
+`ifndef __ICARUS__
     assign o_Clk = r_Out_Data[0];
 `endif
 
@@ -153,7 +153,7 @@ module tm1638
 
     reg  [SPI_READ_WIDTH-1:0]   r_Out_Data;     // The input signal for keys pressed on the TM1638.
     wire [SPI_READ_WIDTH-1:0]   w_Out_Data;     // The pulses for keys pressed on the TM1638.
-`ifdef SIMULATION
+`ifdef __ICARUS__
     // In simulation, the stimulus is controlled by the testbench. And the debouncing nodule is not used.
     // It's tested separately in the testbench.
     assign w_Out_Data = r_Out_Data;
@@ -178,7 +178,7 @@ module tm1638
 `endif
 
     wire    w_Encoder_Btn;     // The pulses for a button pressed on the encoder.
-`ifdef SIMULATION
+`ifdef __ICARUS__
     // In simulation, the stimulus is controlled by the testbench. And the debouncing nodule is not used.
     // It's tested separately in the testbench.
     assign  w_Encoder_Btn = ~i_Encoder_Btn;
@@ -190,7 +190,7 @@ module tm1638
 
     wire    w_Encoder_A;
     wire    w_Encoder_B;
-`ifdef SIMULATION
+`ifdef __ICARUS__
     // In simulation, the stimulus is controlled by the testbench. And the debouncing nodule is not used.
     // It's tested separately in the testbench.
     assign w_Encoder_A = i_Encoder_A;
@@ -259,7 +259,7 @@ module tm1638
         );
 
     wire w_Stimulus_Next;
-`ifdef SIMULATION
+`ifdef __ICARUS__
     // In simulation, the stimulus is controlled by the testbench. And the debouncing nodule is not used.
     // It's tested separately in the testbench.
     assign w_Stimulus_Next = i_Stimulus_Next;
@@ -361,7 +361,7 @@ module tm1638
 
             .i_SPI_FIFO_Full    (r_SPI_FIFO_Full),
             .o_Data             (r_Data),
-`ifndef SIMULATION
+`ifndef __ICARUS__
             .o_Write            (r_Data_Valid)
 `else
             .o_Write            (r_Data_Valid),
@@ -393,12 +393,14 @@ module tm1638
             .io_SPI_Dio     (io_SPI_Dio)
         );
 
-`ifdef SIMULATION
+`ifdef __ICARUS__
     assign o_Diag_Segments_Valid = r_Segments_Valid;
     assign o_Diag_SPI_FIFO_Full  = r_SPI_FIFO_Full;
     assign o_Diag_Data           = r_Data;
     assign o_Diag_Data_Valid     = r_Data_Valid;
 `endif
+
+`ifndef SIMPLE_MAX7219_DRIVER
 
     // The simple test for the MAX7219 driver.
     //
@@ -423,12 +425,12 @@ module tm1638
     //
     // For example, a coordinate of the symbol 'x' is represented by ROW=0, DATA=8b'10000000
     //
-`ifdef SIMULATION
+`ifdef __ICARUS__
     localparam  MAX7219_SPI_CYCLES = 1;
     localparam  MAX7219_DATA_WIDTH = 16;
 `else
     // GOWIN Tang Nano 20K FPGA. 27 MHz clock.
-    localparam  MAX7219_SPI_CYCLES = 200;
+    localparam  MAX7219_SPI_CYCLES = 200; // 200;
     localparam  MAX7219_DATA_WIDTH = 20 * 16;
 
     localparam  HDR = 4'b0000;
@@ -466,19 +468,47 @@ module tm1638
         8'b00000010,
         8'b00000001
     };
-    localparam SYMB_0 = 64'hf88888888888f800;
-    localparam SYMB_1 = 64'h8080808080808000;
-    localparam SYMB_2 = 64'hf80808f88080f800;
-    localparam SYMB_3 = 64'hf88080f88080f800;
-    localparam SYMB_4 = 64'h808080f888888800;
-    localparam SYMB_5 = 64'hf88080f80808f800;
-    localparam SYMB_6 = 64'hf88888f80808f800;
-    localparam SYMB_7 = 64'h808080808080f800;
-    localparam SYMB_8 = 64'hf88888f88888f800;
-    localparam SYMB_9 = 64'hf88080f88888f800;
+    // localparam SYMB_0 = 64'hf88888888888f800;
+    // localparam SYMB_1 = 64'h8080808080808000;
+    // localparam SYMB_2 = 64'hf80808f88080f800;
+    // localparam SYMB_3 = 64'hf88080f88080f800;
+    // localparam SYMB_4 = 64'h808080f888888800;
+    // localparam SYMB_5 = 64'hf88080f80808f800;
+    // localparam SYMB_6 = 64'hf88888f80808f800;
+    // localparam SYMB_7 = 64'h808080808080f800;
+    // localparam SYMB_8 = 64'hf88888f88888f800;
+    // localparam SYMB_9 = 64'hf88080f88888f800;
 
-    wire [7:0][7:0]  DATA_SYMBOLS [10] = {
-        SYMB_0, SYMB_1, SYMB_2, SYMB_3, SYMB_4, SYMB_5, SYMB_6, SYMB_7, SYMB_8, SYMB_9
+    // wire [7:0][7:0]  DATA_SYMBOLS [10] = {
+    //     SYMB_0, SYMB_1, SYMB_2, SYMB_3, SYMB_4, SYMB_5, SYMB_6, SYMB_7, SYMB_8, SYMB_9
+    // };
+
+    // 5x7 left aligned font
+    // wire [7:0][7:0]  DATA_SYMBOLS [10] = {
+    //     64'h1010101010181000,
+    //     64'h1f02040810110e00,
+    //     64'h0e11100c10110e00,
+    //     64'h10101f1214181000,
+    //     64'h0e11100f01011f00,
+    //     64'h0e11110f01110e00,
+    //     64'h0202040810101f00,
+    //     64'h0e11110e11110e00,
+    //     64'h0e11101e11110e00,
+    //     64'h0e11111111110e00
+    // };
+
+    // 4x7 right aligned font
+    wire [7:0][7:0] DATA_SYMBOLS [10] = {
+        64'h6090909090906000,
+        64'h8080808080c08000,
+        64'hf010204080906000,
+        64'h609080e080906000,
+        64'h808080f090a0c000,
+        64'he09080f01010f000,
+        64'h6090907010906000,
+        64'h101020408080f000,
+        64'h609090f090906000,
+        64'h609080e090906000
     };
 
     localparam  REG_SHUT            = 4'b1100;
@@ -504,6 +534,10 @@ module tm1638
         8'b00001000, 8'b00001001, 8'b00001010, 8'b00001011, 8'b00001100, 8'b00001101, 8'b00001110, 8'b00001111
     };
 
+    localparam  REG_TEST            = 4'b1111;
+    localparam  DATA_TEST           = 8'b00000001;
+    localparam  DATA_NO_TEST        = 8'b00000000;
+
 `endif
 
     // Set the data signal r_MAX7219_Data_Valid on the negative edge of the system clock
@@ -516,12 +550,28 @@ module tm1638
     int symbol = 0;
     int row = 0;
 
+    wire [MAX7219_DATA_WIDTH-1:0]   w_MAX7219_DataRowSymbol[10][8]; // [symbol][row]
+    generate
+        genvar  g_symbol;
+        genvar  g_row;
+        for (g_symbol = 0; g_symbol < 10; g_symbol = g_symbol + 1) begin : SYMBOL_GEN
+            for (g_row = 0; g_row < 8; g_row = g_row + 1) begin : ROW_GEN
+                assign w_MAX7219_DataRowSymbol[g_symbol][g_row] = {20{HDR, REG_ROW[g_row], DATA_SYMBOLS[g_symbol][7 - g_row]}};
+            end
+        end
+    endgenerate
+
+    reg [7:0] pattern1;
+    reg [7:0] pattern2;
+
     always @(negedge i_Clk) begin
         if (i_Rst) begin
             r_MAX7219_Data_Valid <= 1'b0;
             step <= 0;
             row <= 0;
             symbol <= 0;
+            pattern1 <= 8'b10000001;
+            pattern2 <= 8'b10000001;
         end
         else begin
             if (r_MAX7219_Data_Valid) begin
@@ -530,7 +580,7 @@ module tm1638
             else begin
                 if (~r_MAX7219_SPI_Busy) begin
                     r_MAX7219_Data_Valid <= 1'b1;
-`ifdef SIMULATION
+`ifdef __ICARUS__
                     r_MAX7219_Data <= 16'b10000000_10000000;
 `else
                     case (step)
@@ -547,7 +597,7 @@ module tm1638
                             step <= step + 1;
                         end
                         3: begin
-                            r_MAX7219_Data <= {{16{HDR, REG_INTENSITY, DATA_INTENSITY[15]}}, {4{HDR, REG_INTENSITY, DATA_INTENSITY[7]}}};
+                            r_MAX7219_Data <= {{16{HDR, REG_INTENSITY, DATA_INTENSITY[15]}}, {4{HDR, REG_INTENSITY, DATA_INTENSITY[2]}}};
                             step <= step + 1;
                         end
                         4: begin
@@ -555,7 +605,25 @@ module tm1638
                             step <= step + 1;
                         end
                         5: begin
-                            r_MAX7219_Data <= {20{HDR, REG_ROW[row], DATA_SYMBOLS[symbol][7 - row]}};
+                            r_MAX7219_Data <= {20{HDR, REG_TEST, DATA_TEST}};
+                            step <= step + 1;
+                        end
+                        6: begin
+                            r_MAX7219_Data <= {20{HDR, REG_TEST, DATA_NO_TEST}};
+                            step <= step + 1;
+                        end
+                        7: begin
+                            r_MAX7219_Data <= {
+                                {4{HDR, REG_ROW[row], pattern1}},
+                                {4{HDR, REG_ROW[row], pattern2}},
+                                {4{HDR, REG_ROW[row], pattern1}},
+                                {4{HDR, REG_ROW[row], pattern2}},
+                                {4{HDR, REG_ROW[row], pattern1}}
+                            };
+                            pattern1 <= {pattern1[6:0], pattern1[7]}; // rotate the pattern left
+                            pattern2 <= {pattern2[0], pattern2[7:1]}; // rotate the pattern right
+                            //r_MAX7219_Data <= w_MAX7219_DataRowSymbol[symbol][row]; //{20{HDR, REG_ROW[row], DATA_SYMBOLS[symbol][7 - row]}};
+                            //r_MAX7219_Data <= {20{HDR, REG_ROW[row], DATA_SYMBOLS[symbol][7 - row]}};
                             if (row == 7) begin
                                 row <= 0;
                                 if (symbol == 9) begin
@@ -572,8 +640,10 @@ module tm1638
                         end
                         default: begin
                             // Process delay before the next symbol
-                            if (step == 1000) begin
-                                step <= 0;
+                            if (step == 200) begin
+                                step <= 7;
+                                pattern1 <= {pattern1[6:0], pattern1[7]}; // rotate the pattern left
+                                pattern2 <= {pattern2[0], pattern2[7:1]}; // rotate the pattern right
                             end
                             else begin
                                 step <= step + 1;
@@ -602,5 +672,124 @@ module tm1638
             .o_SPI_Clk      (o_SPI_MAX7219_Clk),
             .o_SPI_Din      (o_SPI_MAX7219_Din)
         );
+
+`else
+
+
+    // The Frame buffer-based implementation of the MAX7219 driver.
+`ifdef __ICARUS__
+    localparam  MAX7219_SEG_ROWS                = 1;
+    localparam  MAX7219_SEG_COLS                = 1;
+    localparam  MAX7219_SPI_CYCLES              = 2;
+    localparam  MAX7219_DISPLAY_UPDATE_CYCLES   = 1;
+    localparam  MAX7219_FB_UPDATE_CYCLES        = 1;
+`else
+    // GOWIN Tang Nano 20K FPGA. 100 MHz clock.
+    localparam  MAX7219_SEG_ROWS                = 5;
+    localparam  MAX7219_SEG_COLS                = 4;
+    localparam  MAX7219_SPI_CYCLES              =        100;
+    localparam  MAX7219_DISPLAY_UPDATE_CYCLES   =      2_000;
+    localparam  MAX7219_FB_UPDATE_CYCLES        =    200_000;
+`endif
+    localparam  MAX7219_YSIZE   = MAX7219_SEG_ROWS*8;
+    localparam  MAX7219_XSIZE   = MAX7219_SEG_COLS*8;
+    localparam  MAX7219_YSIZE_ADDR_WIDTH = $clog2(MAX7219_YSIZE);
+    localparam  MAX7219_XSIZE_ADDR_WIDTH = $clog2(MAX7219_XSIZE);
+
+    // [y][x]
+    reg [0:MAX7219_YSIZE-1][0:MAX7219_XSIZE-1]  r_MAX7219_FrameBuf;
+
+    // Up to 16 levels of intensity for each display.
+    // [row][col][level]
+    reg [MAX7219_SEG_ROWS-1:0][MAX7219_SEG_COLS-1:0][0:15]  r_MAX7219_Intensity;
+
+    max7219_driver
+    #(  .SEG_ROWS               (MAX7219_SEG_ROWS),
+        .SEG_COLS               (MAX7219_SEG_COLS),
+        .SPI_CYCLES             (MAX7219_SPI_CYCLES),
+        .DISPLAY_UPDATE_CYCLES  (MAX7219_DISPLAY_UPDATE_CYCLES)
+    ) max7219_driver_0 (
+        .i_Rst          (i_Rst),
+        .i_Clk          (i_Clk),
+
+        .i_FrameBuf     (r_MAX7219_FrameBuf),
+        .i_Intensity    (r_MAX7219_Intensity),
+
+        .o_SPI_Stb      (o_SPI_MAX7219_Stb),
+        .o_SPI_Clk      (o_SPI_MAX7219_Clk),
+        .o_SPI_Din      (o_SPI_MAX7219_Din)
+    );
+
+    // Populate the frame buffer and the intensity map with the test data.
+
+    reg [31:0]                  r_MAX7219_FrameBuf_Update_Counter = 32'h0;
+    reg [0:MAX7219_YSIZE_ADDR_WIDTH-1]     r_Y = '0;
+    reg [0:MAX7219_XSIZE_ADDR_WIDTH-1]     r_X = '0;
+    reg r_Val = 1'b0;
+
+    always @(posedge i_Clk) begin
+        if (i_Rst) begin
+            r_MAX7219_FrameBuf_Update_Counter <= 32'h0;
+            r_Y <= '0;
+            r_X <= '0;
+            r_MAX7219_FrameBuf <= '0;
+            r_Val <= 1'b0;
+`ifdef __ICARUS__
+                r_MAX7219_Intensity[0][0] <= 4'h4;
+`else
+                r_MAX7219_Intensity[0][0] <= 4'h0;
+                r_MAX7219_Intensity[0][1] <= 4'h1;
+                r_MAX7219_Intensity[0][2] <= 4'h2;
+                r_MAX7219_Intensity[0][3] <= 4'h3;
+                r_MAX7219_Intensity[1][0] <= 4'h3;
+                r_MAX7219_Intensity[1][1] <= 4'h7;
+                r_MAX7219_Intensity[1][2] <= 4'hB;
+                r_MAX7219_Intensity[1][3] <= 4'hF;
+                r_MAX7219_Intensity[2][0] <= 4'h3;
+                r_MAX7219_Intensity[2][1] <= 4'h7;
+                r_MAX7219_Intensity[2][2] <= 4'hB;
+                r_MAX7219_Intensity[2][3] <= 4'hF;
+                r_MAX7219_Intensity[3][0] <= 4'h3;
+                r_MAX7219_Intensity[3][1] <= 4'h7;
+                r_MAX7219_Intensity[3][2] <= 4'hB;
+                r_MAX7219_Intensity[3][3] <= 4'hF;
+                r_MAX7219_Intensity[4][0] <= 4'h3;
+                r_MAX7219_Intensity[4][1] <= 4'h7;
+                r_MAX7219_Intensity[4][2] <= 4'hB;
+                r_MAX7219_Intensity[4][3] <= 4'hF;
+`endif
+        end
+        else begin
+            if (r_MAX7219_FrameBuf_Update_Counter == MAX7219_FB_UPDATE_CYCLES) begin
+                r_MAX7219_FrameBuf_Update_Counter <= 32'h0;
+`ifdef __ICARUS__
+                r_MAX7219_FrameBuf[1][1] <= 1'b1;
+`else
+                if (r_X == MAX7219_XSIZE - 1) begin
+                    r_X <= '0;
+                    if (r_Y == MAX7219_YSIZE - 1) begin
+                        r_Y <= '0;
+                        r_MAX7219_FrameBuf <= '0;
+                        r_Val <= 1'b0;
+                    end
+                    else begin
+                        r_Y <= r_Y + 1'b1;
+                        r_Val <= ~r_Val;
+                    end
+                end
+                else begin
+                    r_X <= r_X + 1'b1;
+                    r_Val <= ~r_Val;
+                end
+                r_MAX7219_FrameBuf[r_Y][r_X] <= 1'b1 ^ r_MAX7219_FrameBuf[r_Y][r_X];
+                //r_MAX7219_FrameBuf[r_Y][r_X] <= r_Val ^ r_MAX7219_FrameBuf[r_Y][r_X];
+`endif
+            end
+            else begin
+                r_MAX7219_FrameBuf_Update_Counter <= r_MAX7219_FrameBuf_Update_Counter + 1'b1;
+            end
+        end
+    end
+`endif
 
 endmodule

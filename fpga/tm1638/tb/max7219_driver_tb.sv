@@ -3,15 +3,16 @@
 module max7219_driver_tb;
 
     localparam  SEG_ROWS                = 1;
-    localparam  SEG_COLS                = 1;
-    localparam  SPI_CYCLES              = 1;
+    localparam  SEG_COLS                = 2;
+    localparam  SPI_CYCLES              = 2;
     localparam  DISPLAY_UPDATE_CYCLES   = 1;
-
+    localparam  YSIZE                   = SEG_ROWS * 8;
+    localparam  XSIZE                   = SEG_COLS * 8;
     reg r_Rst;
     reg r_Clk;
 
-    reg [SEG_ROWS*8][SEG_COLS*8]    r_FrameBuf;     // [y][x]
-    reg [16][SEG_ROWS][SEG_COLS]    r_Intensity;    // [level][row][col]
+    reg [0:YSIZE-1][0:XSIZE-1]              r_FrameBuf;     // [y][x]
+    reg [SEG_ROWS-1:0][SEG_COLS-1:0][0:15]  r_Intensity;    // [row][col][level]
 
     reg r_SPI_Stb;
     reg r_SPI_Clk;
@@ -46,7 +47,15 @@ module max7219_driver_tb;
     initial begin
         init();
         #1 r_Rst = 1'b0;
-        r_FrameBuf[0][1] = 1'b1;
+        r_Intensity[0][0] = 4'b0011;
+        r_FrameBuf[0][0] = 1'b1;
+        r_FrameBuf[1][1] = 1'b1;
+        r_FrameBuf[2][2] = 1'b1;
+        r_FrameBuf[3][3] = 1'b1;
+        r_FrameBuf[4][4] = 1'b1;
+        r_FrameBuf[5][5] = 1'b1;
+        r_FrameBuf[6][6] = 1'b1;
+        r_FrameBuf[7][7] = 1'b1;
         #4000 $finish;
     end
 

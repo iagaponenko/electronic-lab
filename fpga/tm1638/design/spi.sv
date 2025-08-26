@@ -104,7 +104,7 @@ module spi
         // Output SPI signals
         output reg          o_SPI_Stb,
         output reg          o_SPI_Clk,
-`ifndef SIMULATION
+`ifndef __ICARUS__
         inout  reg          io_SPI_Dio
 `else
         inout  reg          io_SPI_Dio,
@@ -274,7 +274,7 @@ module spi
 
     always @(posedge i_Clk) begin
         if (i_Rst) begin
-`ifndef SIMULATION
+`ifndef __ICARUS__
             o_Data <= '0;
 `else
             // Setting the output data to 'z in the simulation mode helps vizualizing the data
@@ -290,7 +290,7 @@ module spi
                 end
                 DATA_SET_RX_ADDR: begin
                     if (r_RX_Addr_Delay_Cycles == CYCLES) begin
-`ifndef SIMULATION
+`ifndef __ICARUS__
                         // Sample the data signal from the SPI device
                         o_Data[r_RX_Addr] <= io_SPI_Dio;
 `else
@@ -348,7 +348,7 @@ module spi
     //
     assign io_SPI_Dio = (r_State == DATA_SET_ADDR) || (r_State == DATA_TX) ? r_Data[r_Addr] : 1'bz;
 
-`ifdef SIMULATION
+`ifdef __ICARUS__
     assign o_Diag_State = r_State;
     assign o_Diag_Data  = r_Data;
     assign o_Diag_Addr  = r_Addr;
