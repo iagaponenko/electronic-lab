@@ -1,45 +1,51 @@
 # ------------------------------------------------------------------------------
 
+BUILDDIR := $(shell pwd)/build/$(shell hostname)
+BINDIR := $(BUILDDIR)/bin
+RUNDIR := $(BUILDDIR)/run
+LOGDIR := $(BUILDDIR)/logs
+
 targets := \
-bin/tm1638 run/tm1638.vcd \
-bin/tm1638_driver run/tm1638_driver.vcd \
-bin/spi_fifo run/spi_fifo.vcd \
-bin/spi run/spi.vcd \
-bin/fifo run/fifo.vcd \
-bin/debounce run/debounce.vcd \
-bin/pulse run/pulse.vcd \
-bin/encoder run/encoder.vcd \
-bin/max7219 run/max7219.vcd \
-bin/spi_max7219 run/spi_max7219.vcd \
-bin/max7219_driver run/max7219_driver.vcd
+${BINDIR}/tm1638 ${RUNDIR}/tm1638.vcd \
+${BINDIR}/tm1638_driver ${RUNDIR}/tm1638_driver.vcd \
+${BINDIR}/spi_fifo ${RUNDIR}/spi_fifo.vcd \
+${BINDIR}/spi ${RUNDIR}/spi.vcd \
+${BINDIR}/fifo ${RUNDIR}/fifo.vcd \
+${BINDIR}/debounce ${RUNDIR}/debounce.vcd \
+${BINDIR}/pulse ${RUNDIR}/pulse.vcd \
+${BINDIR}/encoder ${RUNDIR}/encoder.vcd \
+${BINDIR}/max7219 ${RUNDIR}/max7219.vcd \
+${BINDIR}/spi_max7219 ${RUNDIR}/spi_max7219.vcd \
+${BINDIR}/max7219_driver ${RUNDIR}/max7219_driver.vcd
 
 .PHONY: all
 all: $(targets)
 
 .PHONY: clean
 clean:
-	for target in $(targets); do rm -f $${target}; done
-	rm -f logs/*.log
+	rm -fv ${BINDIR}/*
+	rm -fv ${RUNDIR}/*
+	rm -fv ${LOGDIR}/*
 
 # ------------------------------------------------------------------------------
 
-bin/fifo: design/fifo.sv tb/fifo_tb.sv
-	mkdir -p bin
+${BINDIR}/fifo: design/fifo.sv tb/fifo_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/fifo.vcd: bin/fifo
-	mkdir -p run logs
-	cd run; ../bin/fifo >& ../logs/fifo.log; cd -
+${RUNDIR}/fifo.vcd: ${BINDIR}/fifo
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/fifo 2>&1 > ${LOGDIR}/fifo.log; cd -
 
 # ------------------------------------------------------------------------------
 
-bin/spi: design/spi.sv tb/spi_tb.sv
-	mkdir -p bin
+${BINDIR}/spi: design/spi.sv tb/spi_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/spi.vcd: bin/spi
-	mkdir -p run logs
-	cd run; ../bin/spi >& ../logs/spi.log; cd -
+${RUNDIR}/spi.vcd: ${BINDIR}/spi
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/spi 2>&1 > ${LOGDIR}/spi.log; cd -
 
 # ------------------------------------------------------------------------------
 
@@ -48,40 +54,40 @@ spi_fifo_files := \
 	design/fifo.sv \
 	design/spi_fifo.sv
 
-bin/spi_fifo: $(spi_fifo_files) tb/spi_fifo_tb.sv
-	mkdir -p bin
+${BINDIR}/spi_fifo: $(spi_fifo_files) tb/spi_fifo_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/spi_fifo.vcd: bin/spi_fifo
-	mkdir -p run logs
-	cd run; ../bin/spi_fifo >& ../logs/spi_fifo.log; cd -
+${RUNDIR}/spi_fifo.vcd: ${BINDIR}/spi_fifo
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/spi_fifo 2>&1 > ${LOGDIR}/spi_fifo.log; cd -
 
 # ------------------------------------------------------------------------------
-bin/debounce: design/debounce.sv tb/debounce_tb.sv
-	mkdir -p bin
+${BINDIR}/debounce: design/debounce.sv tb/debounce_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/debounce.vcd: bin/debounce
-	mkdir -p run logs
-	cd run; ../bin/debounce >& ../logs/debounce.log; cd -
+${RUNDIR}/debounce.vcd: ${BINDIR}/debounce
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/debounce 2>&1 > ${LOGDIR}/debounce.log; cd -
 
 # ------------------------------------------------------------------------------
-bin/pulse: design/pulse.sv tb/pulse_tb.sv
-	mkdir -p bin
+${BINDIR}/pulse: design/pulse.sv tb/pulse_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/pulse.vcd: bin/pulse
-	mkdir -p run logs
-	cd run; ../bin/pulse >& ../logs/pulse.log; cd -
+${RUNDIR}/pulse.vcd: ${BINDIR}/pulse
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/pulse 2>&1 > ${LOGDIR}/pulse.log; cd -
 
 # ------------------------------------------------------------------------------
-bin/encoder: design/encoder.sv design/pulse.sv tb/encoder_tb.sv
-	mkdir -p bin
+${BINDIR}/encoder: design/encoder.sv design/pulse.sv tb/encoder_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/encoder.vcd: bin/encoder
-	mkdir -p run logs
-	cd run; ../bin/encoder >& ../logs/encoder.log; cd -
+${RUNDIR}/encoder.vcd: ${BINDIR}/encoder
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/encoder 2>&1 > ${LOGDIR}/encoder.log; cd -
 
 # ------------------------------------------------------------------------------
 
@@ -96,43 +102,43 @@ tm1638_driver_files := \
 	design/tm1638_stimulus_keys2cntr.sv \
 	design/tm1638_stimulus_encoder.sv
 
-bin/tm1638_driver: $(tm1638_driver_files) tb/tm1638_driver_tb.sv
-	mkdir -p bin
+${BINDIR}/tm1638_driver: $(tm1638_driver_files) tb/tm1638_driver_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/tm1638_driver.vcd: bin/tm1638_driver
-	mkdir -p run logs
-	cd run; ../bin/tm1638_driver >& ../logs/tm1638_driver.log; cd -
+${RUNDIR}/tm1638_driver.vcd: ${BINDIR}/tm1638_driver
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/tm1638_driver 2>&1 > ${LOGDIR}/tm1638_driver.log; cd -
 
 # ------------------------------------------------------------------------------
 
-bin/max7219: design/max7219_write.sv tb/max7219_tb.sv
-	mkdir -p bin
+${BINDIR}/max7219: design/max7219_write.sv tb/max7219_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/max7219.vcd: bin/max7219
-	mkdir -p run logs
-	cd run; ../bin/max7219 >& ../logs/max7219.log; cd -
+${RUNDIR}/max7219.vcd: ${BINDIR}/max7219
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/max7219 2>&1 > ${LOGDIR}/max7219.log; cd -
 
 # ------------------------------------------------------------------------------
 
-bin/spi_max7219: design/spi_max7219.sv tb/spi_max7219_tb.sv
-	mkdir -p bin
+${BINDIR}/spi_max7219: design/spi_max7219.sv tb/spi_max7219_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/spi_max7219.vcd: bin/spi_max7219
-	mkdir -p run logs
-	cd run; ../bin/spi_max7219 >& ../logs/spi_max7219.log; cd -
+${RUNDIR}/spi_max7219.vcd: ${BINDIR}/spi_max7219
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/spi_max7219 2>&1 > ${LOGDIR}/spi_max7219.log; cd -
 
 # ------------------------------------------------------------------------------
 
-bin/max7219_driver: design/spi_max7219.sv design/max7219_driver.sv tb/max7219_driver_tb.sv
-	mkdir -p bin
+${BINDIR}/max7219_driver: design/spi_max7219.sv design/max7219_driver.sv tb/max7219_driver_tb.sv
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/max7219_driver.vcd: bin/max7219_driver
-	mkdir -p run logs
-	cd run; ../bin/max7219_driver >& ../logs/max7219_driver.log; cd -
+${RUNDIR}/max7219_driver.vcd: ${BINDIR}/max7219_driver
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/max7219_driver 2>&1 > ${LOGDIR}/max7219_driver.log; cd -
 
 # ------------------------------------------------------------------------------
 
@@ -147,12 +153,12 @@ tm1638_files := \
 	design/tm1638.sv \
 	tb/tm1638_tb.sv
 
-bin/tm1638: $(tm1638_files)
-	mkdir -p bin
+${BINDIR}/tm1638: $(tm1638_files)
+	mkdir -p ${BINDIR}
 	iverilog -Wall -g2012 -o $@ $^
 
-run/tm1638.vcd: bin/tm1638
-	mkdir -p run logs
-	cd run; ../bin/tm1638 >& ../logs/tm1638.log; cd -
+${RUNDIR}/tm1638.vcd: ${BINDIR}/tm1638
+	mkdir -p ${RUNDIR} ${LOGDIR}
+	cd ${RUNDIR}; ${BINDIR}/tm1638 2>&1 > ${LOGDIR}/tm1638.log; cd -
 
 # ------------------------------------------------------------------------------

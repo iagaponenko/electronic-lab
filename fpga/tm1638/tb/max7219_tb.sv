@@ -7,8 +7,14 @@ module max7219_tb;
 
     max7219_write max7219_write_0 (r_Address, r_Buf);
 
-    initial begin
+    function void init();
+        $dumpfile("max7219.vcd");
+        $dumpvars(0);
         r_Address = 3'h0;
+    endfunction
+
+    initial begin
+        init();
         $monitor("%t r_Address = %b r_Buf = %b", $time, r_Address, r_Buf);
 
         repeat (8) begin

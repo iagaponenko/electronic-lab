@@ -432,7 +432,7 @@ module tm1638
     // GOWIN Tang Nano 20K FPGA. 27 MHz clock.
     localparam  MAX7219_SPI_CYCLES = 200; // 200;
     localparam  MAX7219_DATA_WIDTH = 20 * 16;
-
+`endif
     localparam  HDR = 4'b0000;
 
     localparam  REG_NOP     = 4'b0000;
@@ -446,7 +446,7 @@ module tm1638
     localparam  REG_ROW_5   = 4'b0110;
     localparam  REG_ROW_6   = 4'b0111;
     localparam  REG_ROW_7   = 4'b1000;
-    wire [3:0]  REG_ROW [8] = {
+    wire [8][3:0]  REG_ROW = {
         REG_ROW_0, REG_ROW_1, REG_ROW_2, REG_ROW_3, REG_ROW_4, REG_ROW_5, REG_ROW_6, REG_ROW_7
     };
         
@@ -458,7 +458,7 @@ module tm1638
     localparam  DATA_ROW_5    = 8'b00000100;
     localparam  DATA_ROW_6    = 8'b00000010;
     localparam  DATA_ROW_7    = 8'b00000001;
-    wire [7:0]  DATA_ROW [8] = {
+    wire [8][7:0]  DATA_ROW = {
         8'b11000000,
         8'b01000000,
         8'b00100000,
@@ -498,7 +498,7 @@ module tm1638
     // };
 
     // 4x7 right aligned font
-    wire [7:0][7:0] DATA_SYMBOLS [10] = {
+    wire [10][7:0][7:0] DATA_SYMBOLS = {
         64'h6090909090906000,
         64'h8080808080c08000,
         64'hf010204080906000,
@@ -529,7 +529,7 @@ module tm1638
     localparam  DATA_BCD_ENCODE_NONE    = 8'b00000000;
 
     localparam  REG_INTENSITY   = 4'b1010;
-    wire [7:0]  DATA_INTENSITY [16] = {
+    wire [16][7:0] DATA_INTENSITY = {
         8'b00000000, 8'b00000001, 8'b00000010, 8'b00000011, 8'b00000100, 8'b00000101, 8'b00000110, 8'b00000111,
         8'b00001000, 8'b00001001, 8'b00001010, 8'b00001011, 8'b00001100, 8'b00001101, 8'b00001110, 8'b00001111
     };
@@ -538,7 +538,6 @@ module tm1638
     localparam  DATA_TEST           = 8'b00000001;
     localparam  DATA_NO_TEST        = 8'b00000000;
 
-`endif
 
     // Set the data signal r_MAX7219_Data_Valid on the negative edge of the system clock
     // for one clock cycle only.
@@ -550,6 +549,7 @@ module tm1638
     int symbol = 0;
     int row = 0;
 
+`ifdef __ICARUS__
     wire [MAX7219_DATA_WIDTH-1:0]   w_MAX7219_DataRowSymbol[10][8]; // [symbol][row]
     generate
         genvar  g_symbol;
@@ -560,7 +560,7 @@ module tm1638
             end
         end
     endgenerate
-
+`endif
     reg [7:0] pattern1;
     reg [7:0] pattern2;
 
