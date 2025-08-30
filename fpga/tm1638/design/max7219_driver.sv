@@ -78,7 +78,7 @@ module max7219_driver
     // The 8-bit register address is used to select the corresponding 8-bit row of the 8x8 dot display.
     // [row][register]
     wire [7:0][3:0]  REG_ROW = {
-        4'b00000001, 4'b00000010, 4'b00000011, 4'b00000100, 4'b00000101, 4'b00000111, 4'b00000111, 4'b00001000
+        4'b0001, 4'b0010, 4'b0011, 4'b0100, 4'b0101, 4'b0111, 4'b0111, 4'b1000
     };
 `ifdef __ICARUS__
     initial begin
