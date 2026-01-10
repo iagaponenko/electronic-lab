@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Pixel Editor</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+  <style>
+    body {
+        padding: 10px;
+        font-family: Helvetica;
+    }
+    div.container {
+      padding: 0;
+      margin: 0;
+    }
+    div#pad * {
+        padding: 0;
+        margin: 0;
+    }
+    button.pix, button.label {
+        width: 18px;
+        height: 18px;
+        border: 1px;
+        border-radius: 9px;
+        padding: 0 !important;
+        margin: 0 !important;
+        margin-right: 4px !important;
+        font-size: 11px;
+        font-weight: bold;
+    }
+
+    button.label {
+        background-color: white;
+    }
+
+    button.green {
+        background: hwb(120 3% 13%);
+        color: #000;
+    }
+    button.red {
+        background: hwb(0 2% 4%);
+        color: #000;
+    }
+    div#controls {
+        margin-bottom: 15px;
+    }
+    textarea#data {
+        font-family: monospace;
+        font-size: 12px;
+        color: hsl(180, 1%, 20%);
+        border-color: hsl(180, 1%, 83%);
+        border-radius: 5px;
+        padding: 10px 0px 10px 15px;
+        background-color: lab(97.73% -0.59 -2.38);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col col-sm-8">
+            <div id="pad"></div>
+        </div>
+        <div class="col col-sm-4">
+            <div class="row">
+                <div class="col" id="controls">
+                    <select id="output" class="btn btn-secondary">
+                        <option value="bitmap">Bitmap</option>
+                        <option value="verilog-set">SV (set)</option>
+                        <option value="verilog-clear">SV (clear)</option>
+                        <option value="verilog-xor">SV (xor)</option>
+                    </select>
+                    <button id="clear" class="btn btn-primary">Clear</button>
+                    <button id="parse" class="btn btn-primary">Parse</button>
+                    <button id="export" class="btn btn-primary">Export</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <textarea id="data" rows="50" cols="42"></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <!-- Modal -->
+                    <div class="modal fade" id="exportModalDialog" tabindex="-1" aria-labelledby="exportModalDialogLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exportModalDialogLabel">Pattern Name</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="text" class="form-control" id="patternName" placeholder="The Name of Pattern" value="pixel_data">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelExport">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="saveExport">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <script>
+    let html = '';
+    for (let y=39; y>=0; y--) {
+        let style = y < 8 ? 'style="color: red;"' : '';
+        html += `<div>`;
+        html += `<button class="label" ${style}>${y}</button>`;
+        for (let x=0; x<32; x++) {
+            html += `<button class="pix" x="${x}" y="${y}">&nbsp;</button>`;
+        }
+        html += '</div>';
+    }
+    html += `<button class="label">&nbsp;</button>`;
+    for (let x=0; x<32; x++) {
+        html += `<button class="label">${x}</button>`;
+    }
+    var pad = $("div#pad");
+    pad.html(html);
+    update_data();
+
+    $("button#clear").click(function() {
+        $("button.pix").removeClass("red green");
+        update_data();
+    });
+    $("select#output").change(function() {
+        update_data();
+    });
+    $("button#parse").click(function() {
+        let data = $("#data").val().split('\n');
+        //$("select#output").val('bitmap');
+        $("button.pix").removeClass("red green");
+        for (let y=39; y>=0; y--) {
+            let row = data[39 - y];
+            for (let x=0; x<32; x++) {
+                let bit = row.charAt(x);
+                let elem = $(`button.pix[x=${x}][y=${y}]`);
+                if (bit === '1') {
+                    if (y < 8) {
+                        elem.addClass("red");
+                    } else {
+                        elem.addClass("green");
+                    }
+                }
+            }
+        }
+        update_data();
+    });
+    $("button#export").click(function() {
+        $('#exportModalDialog').modal('toggle');
+    });
+    $("#cancelExport").click(function() {
+        $('#exportModalDialog').modal('hide');
+    });
+    $("#saveExport").click(function() {
+        let pattern_name = $("#patternName").val();
+        $('#exportModalDialog').modal('hide');
+
+        var content_url;
+        var file_name;
+        var a;
+
+        let saved_output_type = $("select#output").val();
+
+        $("select#output").val('bitmap');
+        update_data();
+        content_url = URL.createObjectURL(new Blob([$("#data").val()], {type: "text/plain"}));
+        file_name = pattern_name + '.txt';
+        a = document.createElement('a');
+        a.href = content_url;
+        a.download = file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(content_url);
+
+        $("select#output").val('verilog-set');
+        update_data();
+        content_url = URL.createObjectURL(new Blob([$("#data").val()], {type: "text/plain"}));
+        file_name = pattern_name + '_set.sv';
+        a = document.createElement('a');
+        a.href = content_url;
+        a.download = file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(content_url);
+
+        $("select#output").val('verilog-clear');
+        update_data();
+        content_url = URL.createObjectURL(new Blob([$("#data").val()], {type: "text/plain"}));
+        file_name = pattern_name + '_clear.sv';
+        a = document.createElement('a');
+        a.href = content_url;
+        a.download = file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(content_url);
+
+        $("select#output").val('verilog-xor');
+        update_data();
+        content_url = URL.createObjectURL(new Blob([$("#data").val()], {type: "text/plain"}));
+        file_name = pattern_name + '_xor.sv';
+        a = document.createElement('a');
+        a.href = content_url;
+        a.download = file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(content_url);
+
+        $("select#output").val(saved_output_type);
+        update_data();
+    });
+    $("#patternName").keydown(function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            $("#saveExport").click();
+        }
+    });
+    $("button.pix").click(function() {
+        let elem = $(this);
+        let x = parseInt(elem.attr("x"));
+        let y = parseInt(elem.attr("y"));
+        let isRed = y < 8;
+        if (isRed) {
+            elem.toggleClass("red");
+        } else {
+            elem.toggleClass("green");
+        }
+        update_data();
+    });
+    function update_data() {
+        let data = '';
+        let output_type = $("select#output").val();
+        if (output_type === 'bitmap') {
+            for (let y=39; y>=0; y--) {
+                let bitmap_row = '';
+                for (let x=0; x<32; x++) {
+                    let elem = $(`button.pix[x=${x}][y=${y}]`);
+                    if (elem.hasClass("red")) {
+                        bitmap_row += '1';
+                    } else if (elem.hasClass("green")) {
+                        bitmap_row += '1';
+                    } else {
+                        bitmap_row += '0';
+                    }
+                }
+                bitmap_row += '\n';
+                data += bitmap_row;
+            }
+        } else {
+            if (output_type === 'verilog-xor') {
+                for (let y=39; y>=0; y--) {
+                    let num_active_pixels = 0;
+                    for (let x=0; x<32; x++) {
+                        let elem = $(`button.pix[x=${x}][y=${y}]`);
+                        if (elem.hasClass("red")) {
+                            data += `fb[${y}][${x}] <= fb[${y}][${x}] ^ 1'b1;\n`;
+                        } else if (elem.hasClass("green")) {
+                            data += `fb[${y}][${x}] <= fb[${y}][${x}] ^ 1'b1;\n`;
+                        }
+                    }
+                }
+            } else {
+                const val = output_type == 'verilog-set' ? "1'b1" : "1'b0";
+                for (let y=39; y>=0; y--) {
+                    let num_active_pixels = 0;
+                    for (let x=0; x<32; x++) {
+                        let elem = $(`button.pix[x=${x}][y=${y}]`);
+                        if (elem.hasClass("red")) {
+                            data += `fb[${y}][${x}] <= ${val};\n`;
+                        } else if (elem.hasClass("green")) {
+                            data += `fb[${y}][${x}] <= ${val};\n`;
+                        }
+                    }
+                }
+            }
+        }
+        $("#data").val(data);
+        $("#data").trigger('change');
+    }
+  </script>
+</body>
+</html>
