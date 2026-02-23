@@ -50,7 +50,7 @@ module max7219_driver
     localparam  DATA_NO_TEST        = 8'b00000000;
 
     localparam  REG_INTENSITY   = 4'b1010;
-    wire [0:15][7:0]  DATA_INTENSITY = {
+    wire [15:0][7:0]  DATA_INTENSITY = {
         8'b00000000, 8'b00000001, 8'b00000010, 8'b00000011, 8'b00000100, 8'b00000101, 8'b00000110, 8'b00000111,
         8'b00001000, 8'b00001001, 8'b00001010, 8'b00001011, 8'b00001100, 8'b00001101, 8'b00001110, 8'b00001111
     };
