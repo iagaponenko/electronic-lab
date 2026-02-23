@@ -9,10 +9,10 @@ import time
 def identify():
     rm = pyvisa.ResourceManager()
     print(rm.list_resources())
-    # ('TCPIP0::192.168.0.21::inst0::INSTR',)
+    # ('TCPIP0::10.0.0.200::inst0::INSTR',)
     
-    #inst = rm.open_resource('TCPIP0::192.168.0.21::inst0::INSTR')
-    inst = rm.open_resource('TCPIP0::192.168.0.21')
+    #inst = rm.open_resource('TCPIP0::10.0.0.3::inst0::INSTR')
+    inst = rm.open_resource('TCPIP0::10.0.0.111::INSTR')
     print("session:", inst.session)
 
     print("default timeout [ms]:", inst.timeout)
@@ -109,6 +109,7 @@ def identify():
         for i in range(0, wfLen):
             d = int(data[21 + i])
             if d > 127: d = d - 255
+            if chan == "C1": d = d + 256
             v = d * (0.5/25)
             wfD.append(d)
             wfV.append(v)
