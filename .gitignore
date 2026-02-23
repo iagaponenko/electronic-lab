@@ -1,4 +1,5 @@
 */__pycache__
 fpga/tm1638/out
 experiments/build
+experiments_i2c/build
 .DS_Store
