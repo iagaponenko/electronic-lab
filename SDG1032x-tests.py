@@ -11,7 +11,7 @@ def print_BSWV(bswv, parameters):
 
 
 def main():
-    device = SDG1032X('192.168.0.20')
+    device = SDG1032X('10.0.0.229')
     print("instance:", device.instance())
     print("     IDN:", device.IDN())
     print()
