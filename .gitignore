@@ -1,5 +1,3 @@
-*/__pycache__
-fpga/tm1638/out
-experiments/build
-experiments_i2c/build
+**/__pycache__/
+**/build/
 .DS_Store
