@@ -1,0 +1,4 @@
+VCD info: dumpfile pattern_conwaylife.vcd opened for output.
+VCD warning: $dumpvars: Package ($unit) is not dumpable with VCD.
+VCD warning: $dumpvars: Package (max7219_types) is not dumpable with VCD.
+tb/pattern_conwaylife_tb.sv:28: $finish called at 1000000 (1ps)
